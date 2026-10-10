@@ -72,4 +72,12 @@ describe('buildRemoteEntryUrls', () => {
       'https://analytics.example.com/remote/remoteEntry.js',
     ]);
   });
+
+  it('can skip SPA fallback paths for ESM remotes', () => {
+    expect(
+      buildRemoteEntryUrls('https://schema-ui-mf-remote.vercel.app', origin, {
+        includeAlternatePaths: false,
+      })
+    ).toEqual(['https://schema-ui-mf-remote.vercel.app/remoteEntry.js']);
+  });
 });

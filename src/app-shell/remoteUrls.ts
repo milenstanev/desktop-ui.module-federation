@@ -55,7 +55,8 @@ export function getSchemaUiRemoteBaseUrl(
 
 export function buildRemoteEntryUrls(
   baseUrl: string,
-  origin?: string
+  origin?: string,
+  options?: { includeAlternatePaths?: boolean }
 ): string[] {
   const resolved = new URL(baseUrl, origin ?? window.location.origin);
   const basePath = resolved.pathname.replace(/\/+$/, '');
@@ -67,8 +68,12 @@ export function buildRemoteEntryUrls(
       : `${resolved.origin}/remoteEntry.js`;
   };
 
-  const candidates: string[] = [];
-  candidates.push(toEntryUrl(basePath));
+  const primary = toEntryUrl(basePath);
+  if (options?.includeAlternatePaths === false) {
+    return [primary];
+  }
+
+  const candidates: string[] = [primary];
 
   if (basePath.endsWith('/remote')) {
     const rootPath = basePath.slice(0, -'/remote'.length);

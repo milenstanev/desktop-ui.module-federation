@@ -53,7 +53,9 @@ function getRemoteConfigMap(): Record<string, RemoteConfig> {
     [REMOTE_FEATURE_NAMES.SCHEMA_UI]: {
       name: REMOTE_FEATURE_NAMES.SCHEMA_UI,
       url: schemaUiUrl,
-      entryUrls: buildRemoteEntryUrls(schemaUiUrl),
+      entryUrls: buildRemoteEntryUrls(schemaUiUrl, undefined, {
+        includeAlternatePaths: false,
+      }),
       kind: 'esm',
       expose: './UsersPage',
       displayName: 'Forms',
@@ -171,17 +173,37 @@ async function initSharedScope(container: RemoteContainer): Promise<void> {
   await container.init(scope);
 }
 
-async function importEsmContainer(entryUrl: string): Promise<RemoteContainer> {
-  const imported = (await import(
-    /* webpackIgnore: true */ entryUrl
-  )) as RemoteContainer;
-  if (
-    typeof imported?.init !== 'function' ||
-    typeof imported?.get !== 'function'
-  ) {
-    throw new Error(`ESM remoteEntry at ${entryUrl} does not export init/get`);
+function isRemoteContainer(value: unknown): value is RemoteContainer {
+  if (value == null || typeof value !== 'object') {
+    return false;
   }
-  return imported;
+  const candidate = value as RemoteContainer;
+  return (
+    typeof candidate.init === 'function' && typeof candidate.get === 'function'
+  );
+}
+
+export function resolveEsmRemoteContainer(
+  imported: unknown,
+  entryUrl: string
+): RemoteContainer {
+  if (isRemoteContainer(imported)) {
+    return imported;
+  }
+  if (
+    imported != null &&
+    typeof imported === 'object' &&
+    'default' in imported &&
+    isRemoteContainer((imported as { default: unknown }).default)
+  ) {
+    return (imported as { default: RemoteContainer }).default;
+  }
+  throw new Error(`ESM remoteEntry at ${entryUrl} does not export init/get`);
+}
+
+async function importEsmContainer(entryUrl: string): Promise<RemoteContainer> {
+  const imported: unknown = await import(/* webpackIgnore: true */ entryUrl);
+  return resolveEsmRemoteContainer(imported, entryUrl);
 }
 
 function toFeatureModule(
@@ -241,18 +263,24 @@ async function loadWebpackContainer(
 async function loadEsmContainer(
   config: RemoteConfig
 ): Promise<{ container: RemoteContainer; loadError: Error | null }> {
-  let loadError: Error | null = null;
+  const errors: string[] = [];
 
   for (const entryUrl of config.entryUrls) {
     try {
       const container = await importEsmContainer(entryUrl);
       return { container, loadError: null };
     } catch (error) {
-      loadError = error instanceof Error ? error : new Error(String(error));
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`${entryUrl}: ${message}`);
     }
   }
 
-  return { container: undefined as unknown as RemoteContainer, loadError };
+  return {
+    container: undefined as unknown as RemoteContainer,
+    loadError: errors.length
+      ? new Error(errors.join(' | '))
+      : new Error('No ESM remoteEntry URLs to try'),
+  };
 }
 
 async function loadRemoteFeatureUncached(

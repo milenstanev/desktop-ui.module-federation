@@ -238,6 +238,52 @@ test.describe('Schema UI forms remote', () => {
     ).toBeVisible();
   });
 
+  test('keeps the edited record when remote PUT returns 404', async ({
+    page,
+  }) => {
+    const user = seedUser({ username: 'demo 4' });
+    await page.route(SCHEMA_UI_USERS_API, async (route) => {
+      const request = route.request();
+      const url = new URL(request.url());
+      const path = url.pathname.replace(/\/$/, '');
+      if (path.endsWith('/schema') && request.method() === 'GET') {
+        await json(route, 200, USERS_SCHEMA);
+        return;
+      }
+      if (request.method() === 'GET') {
+        await json(route, 200, [user]);
+        return;
+      }
+      if (request.method() === 'PUT') {
+        await json(route, 404, { error: 'Not found' });
+        return;
+      }
+      await json(route, 404, { error: 'Not found' });
+    });
+
+    await openFormsWindow(page);
+    const forms = page.getByTestId(TEST_SELECTORS.SCHEMA_UI_HOST);
+    await forms
+      .getByRole(TEST_SELECTORS.ROLES.BUTTON, {
+        name: TEST_SELECTORS.BUTTONS.EDIT_RECORD,
+      })
+      .click();
+    await expect(
+      forms.getByRole('heading', { name: /edit record/i })
+    ).toBeVisible();
+    await forms.getByLabel(/username/i).fill('demo 4 updated');
+    await forms
+      .getByRole(TEST_SELECTORS.ROLES.BUTTON, {
+        name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
+      })
+      .click();
+
+    await expect(forms.getByText('demo 4 updated')).toBeVisible();
+    await expect(
+      forms.getByRole('heading', { name: /create record/i })
+    ).toBeVisible();
+  });
+
   test('keeps edit mode when update request fails', async ({ page }) => {
     await page.route(SCHEMA_UI_USERS_API, async (route) => {
       const request = route.request();

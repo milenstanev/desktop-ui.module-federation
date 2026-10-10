@@ -6,6 +6,7 @@ import type { Layouts } from 'react-grid-layout';
 export const LOCAL_STORAGE_DESKTOP_KEY = 'desktopUI.desktop';
 export const LOCAL_STORAGE_LAYOUT_KEY = 'desktopUI.layouts';
 export const LOCAL_STORAGE_THEME_KEY = 'desktopUI.theme';
+export const LOCAL_STORAGE_SCHEMA_UI_OVERLAY_KEY = 'desktopUI.schemaUi.overlay';
 
 /**
  * Initial state config – used when localStorage is empty (first visit).

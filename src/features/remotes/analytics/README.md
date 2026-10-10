@@ -13,6 +13,8 @@ npm run start
 
 Runs on port 3002. The main app loads `http://localhost:3002/remoteEntry.js` when loading the Analytics feature.
 
+In CI/e2e the production `dist/` is served instead of webpack-dev-server.
+
 ## Build
 
 ```bash

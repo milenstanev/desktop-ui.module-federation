@@ -87,8 +87,12 @@
 
 .main {
   padding: var(--window-padding);
+  /* Extra bottom/right inset so last actions are not under the grid resize handle */
+  padding-bottom: calc(var(--window-padding) + 1.5rem);
+  padding-right: calc(var(--window-padding) + 1.25rem);
   height: calc(100% - 53px);
   overflow-y: auto;
+  min-height: 0;
 }
 
 .closeButton {

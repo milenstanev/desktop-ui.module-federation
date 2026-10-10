@@ -22,7 +22,7 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Lint
-        run: npm run lint 2>/dev/null || npx eslint src --ext .ts,.tsx
+        run: npm run lint
 
       - name: Type check
         run: npx tsc --noEmit
@@ -70,6 +70,11 @@ jobs:
         env:
           REACT_APP_ANALYTICS_REMOTE_URL: http://localhost:3002
         run: npm run build
+
+      - name: Build analytics remote
+        run: |
+          npm ci --prefix src/features/remotes/analytics --no-audit --no-fund
+          npm run build --prefix src/features/remotes/analytics
 
       - name: Run Playwright tests
         run: npx playwright test --grep-invert @memory

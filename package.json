@@ -44,6 +44,7 @@
     "host:deploy:vercel:preview": "./scripts/deploy-host-vercel.sh --preview",
     "analytics:start": "cd src/features/remotes/analytics && npm run start",
     "analytics:build": "cd src/features/remotes/analytics && npm run build",
+    "mf:install": "npm ci --prefix src/features/remotes/analytics --no-audit --no-fund && npm ci --prefix host --no-audit --no-fund",
     "analytics:deploy:vercel": "./scripts/deploy-analytics-vercel.sh",
     "analytics:deploy:vercel:preview": "./scripts/deploy-analytics-vercel.sh --preview",
     "mf:demo": "npm run build && npx serve -s build -l 3000"
@@ -56,7 +57,11 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^~/(.*)$": "<rootDir>/src/$1"
+      "^~/(.*)$": "<rootDir>/src/$1",
+      "^react$": "<rootDir>/node_modules/react",
+      "^react-dom$": "<rootDir>/node_modules/react-dom",
+      "^react-redux$": "<rootDir>/node_modules/react-redux",
+      "^@reduxjs/toolkit$": "<rootDir>/node_modules/@reduxjs/toolkit"
     },
     "testMatch": [
       "**/__tests__/**/*.test.[jt]s?(x)",

@@ -149,7 +149,7 @@ const Desktop: React.FC = () => {
               removeWindow={handleRemoveWindow}
               lazyLoadReducerName={window.lazyLoadReducerName}
               isFocused={window.id === focusedWindowId}
-              onFocus={() => handleFocusWindow(window.id)}
+              onFocus={handleFocusWindow}
             >
               {window.lazyLoadComponent && (
                 <ComponentLoader
@@ -164,7 +164,6 @@ const Desktop: React.FC = () => {
                   remoteFeatureName={window.remoteFeatureName}
                   windowId={window.id}
                   windowName={window.name}
-                  lazyLoadReducerName={window.lazyLoadReducerName}
                 />
               )}
             </WindowComponent>

@@ -8,7 +8,7 @@ import reducer, {
   organizeGrid,
 } from './DesktopSlice';
 import type { DesktopUIWindow } from './types';
-import { REDUCER_NAMES } from '~/shared/constants';
+import { LAYOUT_CONFIG, REDUCER_NAMES } from '~/shared/constants';
 
 const TEST_WINDOW_IDS = {
   W1: 'w1',
@@ -67,6 +67,23 @@ describe('DesktopSlice', () => {
     expect(state[FOCUSED_WINDOW_PROPERTY]).toBe(TEST_WINDOW_IDS.W1);
     state = reducer(state, addWindow(w2));
     expect(state[FOCUSED_WINDOW_PROPERTY]).toBe(TEST_WINDOW_IDS.W2);
+  });
+
+  it('applies preferredSize height when adding a window', () => {
+    const window = createWindow({
+      preferredSize: { h: LAYOUT_CONFIG.FORMS_WINDOW_HEIGHT },
+    });
+    const state = reducer(initialState, addWindow(window));
+    expect(state[LAYOUTS_PROPERTY].lg[0].h).toBe(
+      LAYOUT_CONFIG.FORMS_WINDOW_HEIGHT
+    );
+    expect(state[LAYOUTS_PROPERTY].xl[0].h).toBe(
+      LAYOUT_CONFIG.FORMS_WINDOW_HEIGHT
+    );
+    expect(state[LAYOUTS_PROPERTY].sm[0].w).toBe(2);
+    expect(state[LAYOUTS_PROPERTY].sm[0].h).toBe(
+      LAYOUT_CONFIG.FORMS_WINDOW_HEIGHT
+    );
   });
 
   it('does not add duplicate window by id', () => {

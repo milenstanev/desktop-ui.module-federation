@@ -73,6 +73,14 @@ module.exports = function override(config, env) {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
         runtimeCaching: [
           {
+            urlPattern: /\/remoteEntry\.js$/,
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: /^https:\/\/schema-ui-mf-remote\.vercel\.app\//,
+            handler: 'NetworkOnly',
+          },
+          {
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
             handler: 'CacheFirst',
             options: {

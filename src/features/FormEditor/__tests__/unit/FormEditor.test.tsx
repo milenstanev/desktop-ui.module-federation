@@ -8,6 +8,7 @@ import {
   MOCK_USER_DATA,
   ROLE_OPTIONS,
   FORM_FIELD_LABELS,
+  FORM_EDITOR_STRINGS,
 } from '~/shared/constants';
 
 jest.mock('~/shared/utils/mockApi');
@@ -261,6 +262,78 @@ describe('FormEditor', () => {
     });
 
     expect(firstNameInput.value).toBe('John');
+  });
+
+  it('shows a success alert after update', async () => {
+    const updated = { ...MOCK_USER, firstName: 'Jane' };
+    mockUpdateUser.mockResolvedValue({ success: true, user: updated });
+
+    render(<FormEditor />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(TEST_SELECTORS.FORM_EDITOR)
+      ).toBeInTheDocument();
+    });
+
+    const firstNameInput = screen.getByTestId(getFormFieldTestId('firstName'));
+    await userEvent.clear(firstNameInput);
+    await userEvent.type(firstNameInput, 'Jane');
+    await userEvent.click(
+      screen.getByTestId(TEST_SELECTORS.FORM_SUBMIT_BUTTON)
+    );
+
+    await waitFor(() => {
+      expect(window.alert).toHaveBeenCalledWith(
+        FORM_EDITOR_STRINGS.ALERT_SUCCESS
+      );
+    });
+    expect(firstNameInput).toHaveValue('Jane');
+  });
+
+  it('shows an error alert when update is unsuccessful', async () => {
+    mockUpdateUser.mockResolvedValue({
+      success: false,
+      user: MOCK_USER,
+    });
+
+    render(<FormEditor />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(TEST_SELECTORS.FORM_EDITOR)
+      ).toBeInTheDocument();
+    });
+
+    await userEvent.click(
+      screen.getByTestId(TEST_SELECTORS.FORM_SUBMIT_BUTTON)
+    );
+
+    await waitFor(() => {
+      expect(window.alert).toHaveBeenCalledWith(
+        FORM_EDITOR_STRINGS.ALERT_ERROR
+      );
+    });
+  });
+
+  it('shows the thrown error message when update fails', async () => {
+    mockUpdateUser.mockRejectedValue(new Error('Network down'));
+
+    render(<FormEditor />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(TEST_SELECTORS.FORM_EDITOR)
+      ).toBeInTheDocument();
+    });
+
+    await userEvent.click(
+      screen.getByTestId(TEST_SELECTORS.FORM_SUBMIT_BUTTON)
+    );
+
+    await waitFor(() => {
+      expect(window.alert).toHaveBeenCalledWith('Network down');
+    });
   });
 
   it('renders submit button with correct text', async () => {

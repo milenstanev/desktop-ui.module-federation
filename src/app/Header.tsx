@@ -6,11 +6,15 @@ import {
   FileEdit,
   StickyNote,
   Timer,
+  BarChart3,
+  Table2,
   RotateCcw,
   X,
   Grid3x3,
 } from 'lucide-react';
-import MicroFrontendDemo from '~/features/MicroFrontendDemo/MicroFrontendDemo';
+import MicroFrontendDemo, {
+  type RemoteWindowSpec,
+} from '~/features/MicroFrontendDemo/MicroFrontendDemo';
 import styles from './Header.module.css';
 import { useAppDispatch } from '~/core/hooks';
 import {
@@ -23,7 +27,9 @@ import { useTheme, Theme } from '~/core/contexts/ThemeContext';
 import {
   APP_STRINGS,
   COMPONENT_NAMES,
+  LAYOUT_CONFIG,
   REDUCER_NAMES,
+  REMOTE_FEATURE_NAMES,
   THEME_STRINGS,
   THEME_OPTIONS,
 } from '~/shared/constants';
@@ -113,6 +119,34 @@ const Header: React.FC = () => {
     );
   }, [dispatch]);
 
+  const handleAddForms = useCallback(() => {
+    const id = uuidv4();
+
+    dispatch(
+      addWindow({
+        id,
+        name: COMPONENT_NAMES.FORMS,
+        remoteFeatureName: REMOTE_FEATURE_NAMES.SCHEMA_UI,
+        layout: undefined,
+        preferredSize: { h: LAYOUT_CONFIG.FORMS_WINDOW_HEIGHT },
+      })
+    );
+  }, [dispatch]);
+
+  const handleAddAnalytics = useCallback(() => {
+    const id = uuidv4();
+
+    dispatch(
+      addWindow({
+        id,
+        name: COMPONENT_NAMES.ANALYTICS,
+        remoteFeatureName: REMOTE_FEATURE_NAMES.ANALYTICS,
+        layout: undefined,
+        lazyLoadReducerName: REDUCER_NAMES.ANALYTICS,
+      })
+    );
+  }, [dispatch]);
+
   const handleOrganizeGrid = useCallback(() => {
     dispatch(organizeGrid());
   }, [dispatch]);
@@ -124,6 +158,21 @@ const Header: React.FC = () => {
   const handleRemoveAllWindows = useCallback(() => {
     dispatch(removeAllWindows());
   }, [dispatch]);
+
+  const handleOpenRemoteWindow = useCallback(
+    (feature: RemoteWindowSpec) => {
+      dispatch(
+        addWindow({
+          id: uuidv4(),
+          name: feature.displayName,
+          remoteFeatureName: feature.name,
+          layout: undefined,
+          lazyLoadReducerName: feature.reducerName,
+        })
+      );
+    },
+    [dispatch]
+  );
   //endregion
 
   return (
@@ -200,7 +249,23 @@ const Header: React.FC = () => {
           {theme === 'gradient' && <Timer size={16} />}
           <span>{APP_STRINGS.BUTTON_ADD_TIMER}</span>
         </button>
-        <MicroFrontendDemo />
+        <button
+          type="button"
+          onClick={handleAddForms}
+          aria-label={APP_STRINGS.BUTTON_ADD_FORMS}
+        >
+          {theme === 'gradient' && <Table2 size={16} />}
+          <span>{APP_STRINGS.BUTTON_ADD_FORMS}</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleAddAnalytics}
+          aria-label={APP_STRINGS.BUTTON_ADD_ANALYTICS}
+        >
+          {theme === 'gradient' && <BarChart3 size={16} />}
+          <span>{APP_STRINGS.BUTTON_ADD_ANALYTICS}</span>
+        </button>
+        <MicroFrontendDemo onOpenRemoteWindow={handleOpenRemoteWindow} />
       </div>
     </header>
   );

@@ -30,6 +30,9 @@ export const TEST_SELECTORS = {
   // Timer component
   TIMER_CONTAINER: 'timer-container',
 
+  ANALYTICS_REMOTE_FEATURE: 'analytics-remote-feature',
+  SCHEMA_UI_HOST: 'schema-ui-host',
+
   // Counter component
   COUNTER: {
     CONTAINER: 'counter-container',
@@ -77,8 +80,16 @@ export const TEST_SELECTORS = {
     ADD_COUNTER: /add counter/i,
     ADD_NOTES: /add notes/i,
     ADD_TIMER: /add timer/i,
+    ADD_ANALYTICS: /add analytics/i,
+    ADD_FORMS: /add forms/i,
+    EDIT_RECORD: /^edit$/i,
+    UPDATE_RECORD: /^update$/i,
+    CREATE_RECORD: /^create$/i,
+    CANCEL_EDIT: /cancel edit/i,
     ADD_FORM_EDITOR: /add form editor/i,
     ADD_SIMPLE_EXAMPLE: /add simple example/i,
+    ARCHITECTURE: /architecture/i,
+    LOAD_ANALYTICS: /load analytics feature/i,
     ORGANIZE_GRID: /organize/i,
     RESET_LAYOUT: /reset window layouts/i,
     CLOSE_ALL: /close all/i,

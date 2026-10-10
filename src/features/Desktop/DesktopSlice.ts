@@ -66,6 +66,24 @@ function isLayouts(value: unknown): value is Layouts {
 
 const defaultLayouts: Layouts = { xl: [], lg: [], md: [], sm: [] };
 
+function layoutItem(
+  id: string,
+  x: number,
+  y: number,
+  defaults: Layout,
+  preferredSize: DesktopUIWindow['preferredSize'],
+  lockWidth = false
+): Layout {
+  return {
+    ...defaults,
+    i: id,
+    x,
+    y,
+    w: lockWidth ? defaults.w : (preferredSize?.w ?? defaults.w),
+    h: preferredSize?.h ?? defaults.h,
+  };
+}
+
 const storedWindows = safeParseJson<DesktopUIWindow[]>(
   LOCAL_STORAGE_DESKTOP_KEY,
   [],
@@ -142,30 +160,44 @@ export const DesktopSlice = createSlice({
         const mdCol = (windowCount % 2) * 4;
         const mdRow = Math.floor(windowCount / 2) * 4;
 
-        const xl: Layout = action.payload.layout?.xl ?? {
-          ...defaultWindowsPositions.xl,
-          i: `${action.payload.id}`,
-          x: xlCol,
-          y: xlRow,
-        };
-        const lg: Layout = action.payload.layout?.lg ?? {
-          ...defaultWindowsPositions.lg,
-          i: `${action.payload.id}`,
-          x: lgCol,
-          y: lgRow,
-        };
-        const md: Layout = action.payload.layout?.md ?? {
-          ...defaultWindowsPositions.md,
-          i: `${action.payload.id}`,
-          x: mdCol,
-          y: mdRow,
-        };
-        const sm: Layout = action.payload.layout?.sm ?? {
-          ...defaultWindowsPositions.sm,
-          i: `${action.payload.id}`,
-          x: 0,
-          y: windowCount * 4,
-        };
+        const preferredSize = action.payload.preferredSize;
+        const xl: Layout =
+          action.payload.layout?.xl ??
+          layoutItem(
+            action.payload.id,
+            xlCol,
+            xlRow,
+            defaultWindowsPositions.xl,
+            preferredSize
+          );
+        const lg: Layout =
+          action.payload.layout?.lg ??
+          layoutItem(
+            action.payload.id,
+            lgCol,
+            lgRow,
+            defaultWindowsPositions.lg,
+            preferredSize
+          );
+        const md: Layout =
+          action.payload.layout?.md ??
+          layoutItem(
+            action.payload.id,
+            mdCol,
+            mdRow,
+            defaultWindowsPositions.md,
+            preferredSize
+          );
+        const sm: Layout =
+          action.payload.layout?.sm ??
+          layoutItem(
+            action.payload.id,
+            0,
+            windowCount * 4,
+            defaultWindowsPositions.sm,
+            preferredSize,
+            true
+          );
 
         state.layouts.xl.push(xl);
         state.layouts.lg.push(lg);

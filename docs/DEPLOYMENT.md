@@ -12,7 +12,7 @@ Free deployment options for the desktop-ui starter.
 
 **Project configuration** (`vercel.json`):
 - `installCommand: "npm install --legacy-peer-deps"` – used if you have peer dependency conflicts.
-- `ignoreCommand` – deploys only when pushing to `master`; other branches skip deployment.
+- `ignoreCommand` – **exit 0 skips the build**. This project skips non-`master` branches (`exit 0`) and builds `master` (`exit 1`).
 
 **Deploy on merge to master:**
 - With the repo connected, Vercel deploys **automatically** on every push to the production branch.

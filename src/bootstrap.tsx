@@ -3,8 +3,13 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './app/App';
 import reportWebVitals from './reportWebVitals';
-import { sendGAEvent } from './core/analytics/googleAnalytics';
+import {
+  initGoogleAnalytics,
+  sendGAEvent,
+} from './core/analytics/googleAnalytics';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
+
+initGoogleAnalytics();
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -23,18 +28,14 @@ const enablePWA =
 
 if (enablePWA) {
   serviceWorkerRegistration.register({
-    onSuccess: () => console.log('✅ Service worker registered successfully'),
     onUpdate: (registration) => {
-      console.log('🔄 New content available, please refresh.');
       if (registration.waiting) {
         registration.waiting.postMessage({ type: 'SKIP_WAITING' });
       }
     },
   });
-  console.log('📱 PWA enabled - Service worker active');
 } else {
   serviceWorkerRegistration.unregister();
-  console.log('🚫 PWA disabled - Running in development mode');
 }
 
 const enableVitalsLogging =

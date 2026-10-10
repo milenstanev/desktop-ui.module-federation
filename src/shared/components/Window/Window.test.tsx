@@ -103,6 +103,6 @@ describe('Window', () => {
     );
     const content = screen.getByText(TEST_CONTENT.CONTENT_TEXT);
     content.click();
-    expect(onFocus).toHaveBeenCalled();
+    expect(onFocus).toHaveBeenCalledWith(TEST_WINDOW_IDS.W1);
   });
 });

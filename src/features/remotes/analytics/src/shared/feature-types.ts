@@ -1,7 +1,8 @@
 /**
- * Feature Module contract (mirrors desktop-ui core/feature-types)
+ * Feature Module contract (mirrors desktop-ui src/core/feature-types.ts).
  * Keeps analytics remote self-contained.
  */
+import type { Reducer } from '@reduxjs/toolkit';
 import type { ComponentType } from 'react';
 
 export interface RemoteWindowProps {
@@ -12,7 +13,7 @@ export interface RemoteWindowProps {
 
 export interface FeatureReducerSpec {
   name: string;
-  reducer: unknown;
+  reducer: Reducer;
 }
 
 export interface FeatureModule {

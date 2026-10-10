@@ -3,13 +3,21 @@
  *
  * Exported for Module Federation. Implements FeatureModule contract.
  */
-import React from 'react';
+import React, { useCallback } from 'react';
 import { createSlice } from '@reduxjs/toolkit';
+import { useDispatch, useSelector } from 'react-redux';
 import type { FeatureModule, RemoteWindowProps } from './shared/feature-types';
+import { ANALYTICS_STRINGS, ANALYTICS_TEST_ID } from './analyticsCopy';
+import './Feature.css';
 
-const analyticsSlice = createSlice({
-  name: 'analytics',
-  initialState: { views: 0, clicks: 0 },
+const ANALYTICS_NAME = 'analytics';
+const ANALYTICS_DISPLAY_NAME = 'Analytics';
+
+export type AnalyticsState = { views: number; clicks: number };
+
+export const analyticsSlice = createSlice({
+  name: ANALYTICS_NAME,
+  initialState: { views: 0, clicks: 0 } satisfies AnalyticsState,
   reducers: {
     incrementViews: (state) => {
       state.views += 1;
@@ -21,58 +29,64 @@ const analyticsSlice = createSlice({
 });
 
 const AnalyticsComponent: React.FC<RemoteWindowProps> = ({ windowName }) => {
-  const [views, setViews] = React.useState(0);
-  const [clicks, setClicks] = React.useState(0);
+  const views = useSelector(
+    (state: { analytics?: AnalyticsState }) => state.analytics?.views ?? 0
+  );
+  const clicks = useSelector(
+    (state: { analytics?: AnalyticsState }) => state.analytics?.clicks ?? 0
+  );
+  const dispatch = useDispatch();
+
+  const handleIncrementViews = useCallback(() => {
+    dispatch(analyticsSlice.actions.incrementViews());
+  }, [dispatch]);
+
+  const handleIncrementClicks = useCallback(() => {
+    dispatch(analyticsSlice.actions.incrementClicks());
+  }, [dispatch]);
 
   return (
-    <div
-      style={{
-        padding: 16,
-        fontFamily: 'system-ui',
-        minHeight: 120,
-      }}
-      data-testid="analytics-remote-feature"
-    >
-      <h3 style={{ margin: '0 0 12px 0', fontSize: 14 }}>
-        {windowName} (remote)
+    <div className="analytics" data-testid={ANALYTICS_TEST_ID}>
+      <h3 className="title">
+        {windowName} {ANALYTICS_STRINGS.REMOTE_SUFFIX}
       </h3>
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+      <div className="stats">
         <div>
-          <span style={{ color: '#666' }}>Views: </span>
+          <span className="label">{ANALYTICS_STRINGS.VIEWS_LABEL} </span>
           <strong>{views}</strong>
           <button
             type="button"
-            onClick={() => setViews((v) => v + 1)}
-            style={{ marginLeft: 8 }}
+            onClick={handleIncrementViews}
+            className="increment"
+            aria-label={ANALYTICS_STRINGS.INCREMENT_VIEWS_ARIA}
           >
-            +1
+            {ANALYTICS_STRINGS.INCREMENT}
           </button>
         </div>
         <div>
-          <span style={{ color: '#666' }}>Clicks: </span>
+          <span className="label">{ANALYTICS_STRINGS.CLICKS_LABEL} </span>
           <strong>{clicks}</strong>
           <button
             type="button"
-            onClick={() => setClicks((c) => c + 1)}
-            style={{ marginLeft: 8 }}
+            onClick={handleIncrementClicks}
+            className="increment"
+            aria-label={ANALYTICS_STRINGS.INCREMENT_CLICKS_ARIA}
           >
-            +1
+            {ANALYTICS_STRINGS.INCREMENT}
           </button>
         </div>
       </div>
-      <p style={{ fontSize: 12, color: '#888', marginTop: 12 }}>
-        Loaded from analytics remote via Module Federation
-      </p>
+      <p className="caption">{ANALYTICS_STRINGS.LOADED_CAPTION}</p>
     </div>
   );
 };
 
 const AnalyticsFeature: FeatureModule = {
-  name: 'analytics',
-  displayName: 'Analytics',
+  name: ANALYTICS_NAME,
+  displayName: ANALYTICS_DISPLAY_NAME,
   component: AnalyticsComponent,
   reducer: {
-    name: 'analytics',
+    name: analyticsSlice.name,
     reducer: analyticsSlice.reducer,
   },
 };

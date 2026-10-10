@@ -5,148 +5,118 @@
  * Provides the host's React/ReactDOM to the remote to avoid multiple React instances.
  */
 import * as React from 'react';
+import type { ComponentType } from 'react';
 import * as ReactDOM from 'react-dom';
+import * as ReactDOMClient from 'react-dom/client';
 import * as ReactJsxRuntime from 'react/jsx-runtime';
-import { registerFeature } from '~/core/feature-registry';
-import type { FeatureModule } from '~/core/feature-types';
+import type { Reducer } from '@reduxjs/toolkit';
+import { getFeature, registerFeature } from '~/core/feature-registry';
+import type { FeatureModule, RemoteWindowProps } from '~/core/feature-types';
 import { store } from '~/core/store';
+import {
+  buildRemoteEntryUrls,
+  getAnalyticsRemoteBaseUrl,
+  getSchemaUiRemoteBaseUrl,
+} from '~/app-shell/remoteUrls';
+import { REMOTE_FEATURE_NAMES } from '~/shared/constants';
+
+export type RemoteKind = 'webpack-script' | 'esm';
 
 export interface RemoteConfig {
   name: string;
   url: string;
   entryUrls: string[];
+  kind: RemoteKind;
+  expose: string;
+  displayName: string;
 }
 
-function getAnalyticsRemoteBaseUrl(): string {
-  const configured = process.env.REACT_APP_ANALYTICS_REMOTE_URL;
-  if (configured) {
-    return configured.replace(/\/$/, '');
-  }
-
-  const isLocalHost =
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname === '[::1]';
-  if (isLocalHost) {
-    return 'http://localhost:3002';
-  }
-
-  // In production, default to same-origin deployment.
-  // The loader will also try a "/remote" variant for Vercel microfrontends.
-  if (process.env.NODE_ENV === 'production') {
-    return `${window.location.origin}`;
-  }
-
-  return 'http://localhost:3002';
-}
-
-function buildRemoteEntryUrls(baseUrl: string): string[] {
-  const resolved = new URL(baseUrl, window.location.origin);
-  const basePath = resolved.pathname.replace(/\/+$/, '');
-
-  const toEntryUrl = (path: string): string => {
-    const normalizedPath = path.replace(/\/+$/, '');
-    return normalizedPath
-      ? `${resolved.origin}${normalizedPath}/remoteEntry.js`
-      : `${resolved.origin}/remoteEntry.js`;
-  };
-
-  const candidates: string[] = [];
-  candidates.push(toEntryUrl(basePath));
-
-  if (basePath.endsWith('/remote')) {
-    const rootPath = basePath.slice(0, -'/remote'.length);
-    candidates.push(toEntryUrl(rootPath));
-  } else {
-    candidates.push(toEntryUrl(`${basePath}/remote`));
-  }
-
-  // Always keep pure origin as final fallback.
-  candidates.push(toEntryUrl(''));
-
-  return Array.from(new Set(candidates));
-}
-
-const REMOTES: Record<string, RemoteConfig> = {
-  analytics: {
-    name: 'analytics',
-    url: getAnalyticsRemoteBaseUrl(),
-    entryUrls: buildRemoteEntryUrls(getAnalyticsRemoteBaseUrl()),
-  },
+export type RemoteContainer = {
+  init: (scope: unknown) => Promise<void> | void;
+  get: (module: string) => Promise<() => Record<string, unknown>>;
 };
+
+const loadPromises = new Map<string, Promise<FeatureModule>>();
+
+function getRemoteConfigMap(): Record<string, RemoteConfig> {
+  const analyticsUrl = getAnalyticsRemoteBaseUrl();
+  const schemaUiUrl = getSchemaUiRemoteBaseUrl();
+  return {
+    [REMOTE_FEATURE_NAMES.ANALYTICS]: {
+      name: REMOTE_FEATURE_NAMES.ANALYTICS,
+      url: analyticsUrl,
+      entryUrls: buildRemoteEntryUrls(analyticsUrl),
+      kind: 'webpack-script',
+      expose: './Feature',
+      displayName: 'Analytics',
+    },
+    [REMOTE_FEATURE_NAMES.SCHEMA_UI]: {
+      name: REMOTE_FEATURE_NAMES.SCHEMA_UI,
+      url: schemaUiUrl,
+      entryUrls: buildRemoteEntryUrls(schemaUiUrl),
+      kind: 'esm',
+      expose: './UsersPage',
+      displayName: 'Forms',
+    },
+  };
+}
+
+function getRemoteContainer(remoteName: string): RemoteContainer | undefined {
+  const container = (window as unknown as Record<string, unknown>)[
+    remoteName
+  ] as RemoteContainer | undefined;
+  if (!container?.init || !container?.get) {
+    return undefined;
+  }
+  return container;
+}
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      resolve();
+    const existing = document.querySelector(
+      `script[src="${src}"]`
+    ) as HTMLScriptElement | null;
+
+    if (existing) {
+      const status = existing.dataset.mfStatus;
+      if (status === 'loaded') {
+        resolve();
+        return;
+      }
+      if (status === 'error') {
+        reject(new Error(`Failed to load script: ${src}`));
+        return;
+      }
+      existing.addEventListener('load', () => resolve(), { once: true });
+      existing.addEventListener(
+        'error',
+        () => reject(new Error(`Failed to load script: ${src}`)),
+        { once: true }
+      );
       return;
     }
+
     const script = document.createElement('script');
     script.src = src;
     script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+    script.onload = () => {
+      script.dataset.mfStatus = 'loaded';
+      resolve();
+    };
+    script.onerror = () => {
+      script.dataset.mfStatus = 'error';
+      script.remove();
+      reject(new Error(`Failed to load script: ${src}`));
+    };
     document.head.appendChild(script);
   });
 }
 
-/**
- * Load a feature from a remote micro-frontend and register it.
- * Injects the reducer if present.
- */
-export async function loadRemoteFeature(
-  remoteName: string
-): Promise<FeatureModule> {
-  const config = REMOTES[remoteName];
-  if (!config) {
-    throw new Error(`Unknown remote: ${remoteName}`);
-  }
+function reactShareVersion(): string {
+  return React.version || '18.3.1';
+}
 
-  let loadError: Error | null = null;
-  for (const entryUrl of config.entryUrls) {
-    try {
-      await loadScript(entryUrl);
-      loadError = null;
-      break;
-    } catch (error) {
-      loadError = error instanceof Error ? error : new Error(String(error));
-    }
-  }
-  if (loadError) {
-    throw loadError;
-  }
-
-  const container = (window as unknown as Record<string, unknown>)[
-    remoteName
-  ] as
-    | {
-        init: (scope: unknown) => Promise<void>;
-        get: (module: string) => Promise<() => { default: FeatureModule }>;
-      }
-    | undefined;
-
-  if (!container?.init || !container?.get) {
-    const availableContainerGlobals = Object.keys(
-      window as unknown as Record<string, unknown>
-    )
-      .filter((key) => /^[a-zA-Z_$][\w$]*$/.test(key))
-      .filter(
-        (key) =>
-          ['desktopUI', 'analytics', 'host'].includes(key) ||
-          key.toLowerCase().includes('remote')
-      )
-      .slice(0, 10);
-
-    throw new Error(
-      `Remote "${remoteName}" container not found. Tried: ${config.entryUrls.join(
-        ', '
-      )}. Ensure one URL serves a valid remoteEntry.js that exposes "${remoteName}".` +
-        (availableContainerGlobals.length
-          ? ` Available container-like globals: ${availableContainerGlobals.join(', ')}.`
-          : '')
-    );
-  }
-
+async function initSharedScope(container: RemoteContainer): Promise<void> {
   const win = window as Window & {
     __webpack_init_sharing__?: (scope: string) => Promise<void>;
     __webpack_share_scopes__?: {
@@ -158,10 +128,11 @@ export async function loadRemoteFeature(
   }
 
   const scope = win.__webpack_share_scopes__?.default ?? {};
+  const version = reactShareVersion();
   const ensureReactInScope = () => {
     if (!scope.react) {
       scope.react = {
-        '18.3.1': {
+        [version]: {
           get: () => Promise.resolve(() => React),
           loaded: 1,
           from: 'desktopUI',
@@ -170,7 +141,7 @@ export async function loadRemoteFeature(
     }
     if (!scope['react-dom']) {
       scope['react-dom'] = {
-        '18.3.1': {
+        [version]: {
           get: () => Promise.resolve(() => ReactDOM),
           loaded: 1,
           from: 'desktopUI',
@@ -179,8 +150,17 @@ export async function loadRemoteFeature(
     }
     if (!scope['react/jsx-runtime']) {
       scope['react/jsx-runtime'] = {
-        '18.3.1': {
+        [version]: {
           get: () => Promise.resolve(() => ReactJsxRuntime),
+          loaded: 1,
+          from: 'desktopUI',
+        },
+      };
+    }
+    if (!scope['react-dom/client']) {
+      scope['react-dom/client'] = {
+        [version]: {
+          get: () => Promise.resolve(() => ReactDOMClient),
           loaded: 1,
           from: 'desktopUI',
         },
@@ -189,10 +169,145 @@ export async function loadRemoteFeature(
   };
   ensureReactInScope();
   await container.init(scope);
+}
 
-  const factory = await container.get('./Feature');
+async function importEsmContainer(entryUrl: string): Promise<RemoteContainer> {
+  const imported = (await import(
+    /* webpackIgnore: true */ entryUrl
+  )) as RemoteContainer;
+  if (
+    typeof imported?.init !== 'function' ||
+    typeof imported?.get !== 'function'
+  ) {
+    throw new Error(`ESM remoteEntry at ${entryUrl} does not export init/get`);
+  }
+  return imported;
+}
+
+function toFeatureModule(
+  config: RemoteConfig,
+  mod: Record<string, unknown>
+): FeatureModule {
+  const maybeFeature = mod.default as FeatureModule | undefined;
+  if (maybeFeature?.name && maybeFeature?.component) {
+    return maybeFeature;
+  }
+
+  const component = (mod.UsersPage ||
+    mod.FormDynamic ||
+    mod.default ||
+    mod.App) as ComponentType<Record<string, unknown>> | undefined;
+
+  if (!component) {
+    throw new Error(
+      `Invalid module from remote "${config.name}" expose "${config.expose}"`
+    );
+  }
+
+  const Wrapped: React.FC<RemoteWindowProps> = () =>
+    React.createElement(component);
+
+  return {
+    name: config.name,
+    displayName: config.displayName,
+    component: Wrapped,
+  };
+}
+
+async function loadWebpackContainer(
+  config: RemoteConfig
+): Promise<{ container: RemoteContainer; loadError: Error | null }> {
+  let loadError: Error | null = null;
+  let container: RemoteContainer | undefined;
+
+  for (const entryUrl of config.entryUrls) {
+    try {
+      await loadScript(entryUrl);
+      container = getRemoteContainer(config.name);
+      if (container) {
+        return { container, loadError: null };
+      }
+      loadError = new Error(
+        `Script loaded from ${entryUrl} but remote "${config.name}" container was not found`
+      );
+    } catch (error) {
+      loadError = error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
+  return { container: container as RemoteContainer, loadError };
+}
+
+async function loadEsmContainer(
+  config: RemoteConfig
+): Promise<{ container: RemoteContainer; loadError: Error | null }> {
+  let loadError: Error | null = null;
+
+  for (const entryUrl of config.entryUrls) {
+    try {
+      const container = await importEsmContainer(entryUrl);
+      return { container, loadError: null };
+    } catch (error) {
+      loadError = error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
+  return { container: undefined as unknown as RemoteContainer, loadError };
+}
+
+async function loadRemoteFeatureUncached(
+  remoteName: string
+): Promise<FeatureModule> {
+  const registered = getFeature(remoteName);
+  if (registered) {
+    return registered;
+  }
+
+  const config = getRemoteConfigMap()[remoteName];
+  if (!config) {
+    throw new Error(`Unknown remote: ${remoteName}`);
+  }
+
+  const loaded =
+    config.kind === 'esm'
+      ? await loadEsmContainer(config)
+      : await loadWebpackContainer(config);
+
+  const container = loaded.container;
+  const loadError = loaded.loadError;
+
+  if (!container?.init || !container?.get) {
+    const availableContainerGlobals = Object.keys(
+      window as unknown as Record<string, unknown>
+    )
+      .filter((key) => /^[a-zA-Z_$][\w$]*$/.test(key))
+      .filter(
+        (key) =>
+          [
+            'desktopUI',
+            REMOTE_FEATURE_NAMES.ANALYTICS,
+            REMOTE_FEATURE_NAMES.SCHEMA_UI,
+            'host',
+          ].includes(key) || key.toLowerCase().includes('remote')
+      )
+      .slice(0, 10);
+
+    throw new Error(
+      `Remote "${remoteName}" container not found. Tried: ${config.entryUrls.join(
+        ', '
+      )}. Ensure one URL serves a valid remoteEntry.js that exposes "${remoteName}".` +
+        (availableContainerGlobals.length
+          ? ` Available container-like globals: ${availableContainerGlobals.join(', ')}.`
+          : '') +
+        (loadError ? ` Last error: ${loadError.message}` : '')
+    );
+  }
+
+  await initSharedScope(container);
+
+  const factory = await container.get(config.expose);
   const mod = factory();
-  const feature = mod.default;
+  const feature = toFeatureModule(config, mod);
 
   if (!feature?.name || !feature?.component) {
     throw new Error(`Invalid FeatureModule from remote "${remoteName}"`);
@@ -202,12 +317,12 @@ export async function loadRemoteFeature(
 
   if (feature.reducer) {
     const storeWithManager = store as typeof store & {
-      reducerManager?: { add: (key: string, reducer: unknown) => void };
+      reducerManager?: { add: (key: string, reducer: Reducer) => void };
     };
     if (storeWithManager.reducerManager) {
       storeWithManager.reducerManager.add(
-        feature.reducer!.name,
-        feature.reducer!.reducer
+        feature.reducer.name,
+        feature.reducer.reducer
       );
     }
   }
@@ -219,10 +334,34 @@ export async function loadRemoteFeature(
   return feature;
 }
 
+/**
+ * Load a feature from a remote micro-frontend and register it.
+ * Injects the reducer if present. Concurrent calls share one in-flight promise.
+ */
+export function loadRemoteFeature(remoteName: string): Promise<FeatureModule> {
+  const existing = loadPromises.get(remoteName);
+  if (existing) {
+    return existing;
+  }
+
+  const pending = loadRemoteFeatureUncached(remoteName).catch((error) => {
+    loadPromises.delete(remoteName);
+    throw error;
+  });
+  loadPromises.set(remoteName, pending);
+  return pending;
+}
+
 export function getRemoteConfig(remoteName: string): RemoteConfig | undefined {
-  return REMOTES[remoteName];
+  return getRemoteConfigMap()[remoteName];
 }
 
 export function getAvailableRemotes(): string[] {
-  return Object.keys(REMOTES);
+  return Object.keys(getRemoteConfigMap());
 }
+
+export {
+  buildRemoteEntryUrls,
+  getAnalyticsRemoteBaseUrl,
+  getSchemaUiRemoteBaseUrl,
+};

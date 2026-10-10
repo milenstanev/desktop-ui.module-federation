@@ -76,12 +76,13 @@ new ModuleFederationPlugin({
 
 ## Loading a Remote
 
-1. User clicks **Load Analytics Feature** in the Architecture panel
-2. `loadRemoteFeature('analytics')` fetches `http://localhost:3002/remoteEntry.js`
-3. The remote container initializes shared scope (React, Redux)
-4. `registerFeature()` adds the feature to the registry
-5. Reducer is injected via `store.reducerManager.add()`
-6. A new window opens with the remote component
+1. User clicks **Load Analytics Feature** in the Architecture panel (or a persisted remote window mounts)
+2. `loadRemoteFeature('analytics')` fetches candidate `remoteEntry.js` URLs until the `analytics` container is present
+3. Concurrent callers share one in-flight promise
+4. The remote container initializes shared scope (React, Redux)
+5. `registerFeature()` adds the feature to the registry
+6. Reducer is injected via `store.reducerManager.add()`
+7. A window renders `RemoteFeatureLoader`, which re-loads the remote after a refresh
 
 ## Deployment Strategy
 
@@ -91,13 +92,19 @@ new ModuleFederationPlugin({
 
 ### Environment Variables
 
-- `REACT_APP_ANALYTICS_REMOTE_URL` — Analytics remote URL (default: `http://localhost:3002`)
+- `REACT_APP_ANALYTICS_REMOTE_URL` — Analytics remote base URL (no `/remoteEntry.js`)
 
-For production, set the full URL where the remote is deployed:
+Defaults:
+- Local (`localhost`): `http://localhost:3002`
+- Production when unset: `{window.location.origin}/remote` so the host's own `/remoteEntry.js` is not loaded first
+
+For a dedicated analytics deployment:
 
 ```
 REACT_APP_ANALYTICS_REMOTE_URL=https://analytics.myapp.com
 ```
+
+The loader only accepts a candidate URL after `window.analytics` exists. Loading the host `remoteEntry.js` is skipped, then `/remote/remoteEntry.js` is tried.
 
 ## Running the Demo
 

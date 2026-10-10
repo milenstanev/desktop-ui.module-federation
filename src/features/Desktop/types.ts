@@ -15,4 +15,6 @@ export type DesktopUIWindow = {
   remoteFeatureName?: string;
   layout: WindowLayout | undefined;
   lazyLoadReducerName?: string | undefined;
+  /** Optional size applied when auto-placing a new window */
+  preferredSize?: { w?: number; h?: number };
 };

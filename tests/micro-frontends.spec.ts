@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { TEST_SELECTORS } from '~/shared/testSelectors';
+import { MICRO_FRONTEND_STRINGS } from '~/shared/constants';
 
 test.describe('Micro-frontends', () => {
   test('loads analytics remote feature in a desktop window', async ({
@@ -6,13 +8,14 @@ test.describe('Micro-frontends', () => {
   }) => {
     await page.goto('/');
 
-    await page.getByRole('button', { name: /Architecture/i }).click();
-    await page.getByRole('button', { name: /Load Analytics Feature/i }).click();
-
-    const feature = page.getByTestId('analytics-remote-feature');
-    const remoteError = page.locator('p').filter({
-      hasText: /Remote "analytics" container not found|Failed to load script/i,
+    const addAnalytics = page.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
+      name: TEST_SELECTORS.BUTTONS.ADD_ANALYTICS,
     });
+    await expect(addAnalytics).toBeVisible();
+    await addAnalytics.click();
+
+    const feature = page.getByTestId(TEST_SELECTORS.ANALYTICS_REMOTE_FEATURE);
+    const remoteError = page.getByRole('alert');
 
     await expect
       .poll(
@@ -28,7 +31,13 @@ test.describe('Micro-frontends', () => {
     await expect(remoteError).toHaveCount(0);
     await expect(feature).toBeVisible();
     await expect(
-      page.getByText('Loaded from analytics remote via Module Federation')
+      page.getByText(MICRO_FRONTEND_STRINGS.LOADED_CAPTION)
+    ).toBeVisible();
+
+    await page.reload();
+    await expect(feature).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByText(MICRO_FRONTEND_STRINGS.LOADED_CAPTION)
     ).toBeVisible();
   });
 });

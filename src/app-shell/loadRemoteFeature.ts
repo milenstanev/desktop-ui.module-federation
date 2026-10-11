@@ -14,6 +14,10 @@ import { getFeature, registerFeature } from '~/core/feature-registry';
 import type { FeatureModule, RemoteWindowProps } from '~/core/feature-types';
 import { store } from '~/core/store';
 import {
+  assertEsmRemoteEntry,
+  importRemoteEsmModule,
+} from '~/app-shell/importRemoteEsm';
+import {
   buildRemoteEntryUrls,
   getAnalyticsRemoteBaseUrl,
   getSchemaUiRemoteBaseUrl,
@@ -202,7 +206,8 @@ export function resolveEsmRemoteContainer(
 }
 
 async function importEsmContainer(entryUrl: string): Promise<RemoteContainer> {
-  const imported: unknown = await import(/* webpackIgnore: true */ entryUrl);
+  await assertEsmRemoteEntry(entryUrl);
+  const imported: unknown = await importRemoteEsmModule(entryUrl);
   return resolveEsmRemoteContainer(imported, entryUrl);
 }
 

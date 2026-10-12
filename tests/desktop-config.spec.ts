@@ -43,7 +43,7 @@ test.describe('Dashboard JSON configurator', () => {
 
     await expect(
       page.getByTestId(TEST_SELECTORS.DESKTOP_CONFIG_STATUS)
-    ).toHaveTextContent(APP_STRINGS.CONFIGURATOR_APPLIED);
+    ).toHaveText(APP_STRINGS.CONFIGURATOR_APPLIED);
     await expect(
       page.getByTestId(TEST_SELECTORS.TIMER_CONTAINER)
     ).toBeVisible();

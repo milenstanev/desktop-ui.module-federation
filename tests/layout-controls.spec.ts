@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { NOTES_STRINGS } from '~/shared/constants';
 import { TEST_SELECTORS } from '~/shared/testSelectors';
 import { closeAllWindows } from '~/tests/helpers';
+import { INITIAL_STATE_CONFIG } from '~/features/Desktop/config';
 
 test.describe('Layout control buttons', () => {
   test.beforeEach(async ({ page, context }) => {
@@ -246,10 +247,12 @@ test.describe('Layout control buttons', () => {
     await page.reload();
     await page.getByTestId(TEST_SELECTORS.APP_HEADING).waitFor();
 
-    // After reload with empty stored state, app shows initial windows (Counter, Notes, FormEditor)
+    // After reload with empty stored state, app shows the built-in dashboard
     const windowsAfterReload = page.locator(
       `[role="${TEST_SELECTORS.WINDOW_ROLE}"]`
     );
-    await expect(windowsAfterReload).toHaveCount(3);
+    await expect(windowsAfterReload).toHaveCount(
+      INITIAL_STATE_CONFIG.initialWindows.length
+    );
   });
 });

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { TEST_SELECTORS } from '~/shared/testSelectors';
+import { closeAllWindows } from '~/tests/helpers';
 
 test.describe('Timer feature', () => {
   test.beforeEach(async ({ page, context }) => {
@@ -12,6 +13,7 @@ test.describe('Timer feature', () => {
     await page.reload();
     await page.waitForLoadState('domcontentloaded');
     await page.getByTestId(TEST_SELECTORS.APP_HEADING).waitFor();
+    await closeAllWindows(page);
   });
 
   test('opens Timer window and shows timer UI', async ({ page }) => {

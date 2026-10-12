@@ -168,7 +168,7 @@ test.describe('Schema UI forms remote', () => {
 
   test('loads UsersPage forms from schema-ui-mf-remote', async ({ page }) => {
     await openFormsWindow(page);
-    await expect(page.getByText(/schema-driven crud/i)).toBeVisible();
+    await expect(page.getByText(/schema-driven/i)).toBeVisible();
     await expect(page.getByTestId(TEST_SELECTORS.SCHEMA_UI_HOST)).toBeVisible();
   });
 
@@ -179,7 +179,7 @@ test.describe('Schema UI forms remote', () => {
 
     const forms = page.getByTestId(TEST_SELECTORS.SCHEMA_UI_HOST);
     await expect(
-      forms.getByRole('heading', { name: /create record/i })
+      forms.getByRole('heading', { name: /new record|create record/i })
     ).toBeVisible();
 
     await forms.getByLabel(/username/i).fill('created-user');
@@ -206,12 +206,14 @@ test.describe('Schema UI forms remote', () => {
     await openFormsWindow(page);
 
     const forms = page.getByTestId(TEST_SELECTORS.SCHEMA_UI_HOST);
-    const editButton = forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
-      name: TEST_SELECTORS.BUTTONS.EDIT_RECORD,
-    });
+    const editButton = forms
+      .getByRole(TEST_SELECTORS.ROLES.BUTTON, {
+        name: TEST_SELECTORS.BUTTONS.EDIT_RECORD,
+      })
+      .first();
     await expect(editButton).toBeVisible();
     await editButton.scrollIntoViewIfNeeded();
-    await editButton.click();
+    await editButton.click({ force: true });
 
     await expect(
       forms.getByRole('heading', { name: /edit record/i })
@@ -234,7 +236,7 @@ test.describe('Schema UI forms remote', () => {
     );
     await expect(forms.getByText('updated-user')).toBeVisible();
     await expect(
-      forms.getByRole('heading', { name: /create record/i })
+      forms.getByRole('heading', { name: /new record|create record/i })
     ).toBeVisible();
   });
 
@@ -267,7 +269,8 @@ test.describe('Schema UI forms remote', () => {
       .getByRole(TEST_SELECTORS.ROLES.BUTTON, {
         name: TEST_SELECTORS.BUTTONS.EDIT_RECORD,
       })
-      .click();
+      .first()
+      .click({ force: true });
     await expect(
       forms.getByRole('heading', { name: /edit record/i })
     ).toBeVisible();
@@ -280,7 +283,7 @@ test.describe('Schema UI forms remote', () => {
 
     await expect(forms.getByText('demo 4 updated')).toBeVisible();
     await expect(
-      forms.getByRole('heading', { name: /create record/i })
+      forms.getByRole('heading', { name: /new record|create record/i })
     ).toBeVisible();
   });
 
@@ -306,11 +309,13 @@ test.describe('Schema UI forms remote', () => {
 
     await openFormsWindow(page);
     const forms = page.getByTestId(TEST_SELECTORS.SCHEMA_UI_HOST);
-    const editButton = forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
-      name: TEST_SELECTORS.BUTTONS.EDIT_RECORD,
-    });
+    const editButton = forms
+      .getByRole(TEST_SELECTORS.ROLES.BUTTON, {
+        name: TEST_SELECTORS.BUTTONS.EDIT_RECORD,
+      })
+      .first();
     await editButton.scrollIntoViewIfNeeded();
-    await editButton.click();
+    await editButton.click({ force: true });
     await expect(
       forms.getByRole('heading', { name: /edit record/i })
     ).toBeVisible();

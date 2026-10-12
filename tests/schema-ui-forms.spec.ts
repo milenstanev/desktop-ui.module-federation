@@ -216,7 +216,9 @@ test.describe('Schema UI forms remote', () => {
     await editButton.click({ force: true });
 
     await expect(
-      forms.getByRole('heading', { name: /edit record/i })
+      forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
+        name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
+      })
     ).toBeVisible();
 
     const username = forms.getByLabel(/username/i);
@@ -272,7 +274,9 @@ test.describe('Schema UI forms remote', () => {
       .first()
       .click({ force: true });
     await expect(
-      forms.getByRole('heading', { name: /edit record/i })
+      forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
+        name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
+      })
     ).toBeVisible();
     await forms.getByLabel(/username/i).fill('demo 4 updated');
     await forms
@@ -317,7 +321,9 @@ test.describe('Schema UI forms remote', () => {
     await editButton.scrollIntoViewIfNeeded();
     await editButton.click({ force: true });
     await expect(
-      forms.getByRole('heading', { name: /edit record/i })
+      forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
+        name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
+      })
     ).toBeVisible();
     await forms
       .getByRole(TEST_SELECTORS.ROLES.BUTTON, {
@@ -325,7 +331,9 @@ test.describe('Schema UI forms remote', () => {
       })
       .click();
     await expect(
-      forms.getByRole('heading', { name: /edit record/i })
+      forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
+        name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
+      })
     ).toBeVisible();
     await expect(forms.getByText('demo')).toBeVisible();
   });

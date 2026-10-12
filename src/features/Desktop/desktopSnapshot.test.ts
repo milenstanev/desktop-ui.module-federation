@@ -4,6 +4,7 @@ import {
   LOCAL_STORAGE_DESKTOP_KEY,
 } from './config';
 import {
+  buildDesktopShareUrl,
   getBuiltInDesktopSnapshot,
   parseDesktopSnapshot,
   parseDesktopSnapshotJson,
@@ -46,6 +47,29 @@ describe('parseDesktopSnapshot', () => {
     expect(parseDesktopSnapshotJson(serializeDesktopSnapshot(builtIn))).toEqual(
       builtIn
     );
+  });
+});
+
+describe('buildDesktopShareUrl', () => {
+  it('encodes a compact snapshot as a desktopConfig query', () => {
+    const snapshot = parseDesktopSnapshot([
+      {
+        id: 'timer-1',
+        name: COMPONENT_NAMES.TIMER,
+        lazyLoadComponent: 'Timer',
+      },
+    ]);
+    const url = buildDesktopShareUrl(
+      snapshot!,
+      'https://desktop-ui-mf.vercel.app',
+      '/'
+    );
+    expect(url.startsWith('https://desktop-ui-mf.vercel.app/?')).toBe(true);
+    const parsed = new URL(url);
+    expect(readDesktopConfigFromSearch(parsed.search)?.windows[0].id).toBe(
+      'timer-1'
+    );
+    expect(parsed.searchParams.get(DESKTOP_CONFIG_QUERY_PARAM)).not.toBeNull();
   });
 });
 

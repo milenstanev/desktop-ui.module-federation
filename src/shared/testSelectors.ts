@@ -100,6 +100,7 @@ export const TEST_SELECTORS = {
     DASHBOARD_CONFIG: /dashboard layout json/i,
     APPLY_DASHBOARD_JSON: /apply json/i,
     COPY_DASHBOARD_JSON: /copy current json/i,
+    COPY_DASHBOARD_URL: /copy url/i,
     DEFAULT_DASHBOARD: /use built-in dashboard/i,
     CLOSE_WINDOW: /close window/i,
     START_TIMER: /start/i,

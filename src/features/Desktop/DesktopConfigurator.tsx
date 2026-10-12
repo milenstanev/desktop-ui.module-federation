@@ -7,7 +7,9 @@ import { APP_STRINGS } from '~/shared/constants';
 import { TEST_SELECTORS } from '~/shared/testSelectors';
 import { applyDesktopConfig } from './DesktopSlice';
 import {
+  buildDesktopShareUrl,
   getBuiltInDesktopSnapshot,
+  parseDesktopSnapshot,
   parseDesktopSnapshotJson,
   readDesktopConfigFromSearch,
   saveBootstrapSnapshot,
@@ -84,6 +86,32 @@ const DesktopConfigurator: React.FC = () => {
     }
   }, [windows, layouts]);
 
+  const handleCopyUrl = useCallback(() => {
+    const fromLiveDesktop =
+      windows.length > 0
+        ? (parseDesktopSnapshot({ windows, layouts }) ?? {
+            windows,
+            layouts,
+          })
+        : null;
+    const snapshot = fromLiveDesktop ?? parseDesktopSnapshotJson(draft);
+    if (!snapshot) {
+      setInvalid(true);
+      setStatus(APP_STRINGS.CONFIGURATOR_INVALID);
+      return;
+    }
+    const url = buildDesktopShareUrl(
+      snapshot,
+      window.location.origin,
+      window.location.pathname
+    );
+    setInvalid(false);
+    setStatus(APP_STRINGS.CONFIGURATOR_URL_COPIED);
+    if (typeof navigator.clipboard?.writeText === 'function') {
+      void navigator.clipboard.writeText(url);
+    }
+  }, [draft, layouts, windows]);
+
   const handleBuiltInDefault = useCallback(() => {
     const snapshot = getBuiltInDesktopSnapshot();
     dispatch(applyDesktopConfig(snapshot));
@@ -159,6 +187,9 @@ const DesktopConfigurator: React.FC = () => {
                   </button>
                   <button type="button" onClick={handleCopyCurrent}>
                     {APP_STRINGS.CONFIGURATOR_COPY}
+                  </button>
+                  <button type="button" onClick={handleCopyUrl}>
+                    {APP_STRINGS.CONFIGURATOR_COPY_URL}
                   </button>
                   <button type="button" onClick={handleBuiltInDefault}>
                     {APP_STRINGS.CONFIGURATOR_DEFAULT}

@@ -85,6 +85,11 @@ test.describe('Dashboard JSON configurator', () => {
 
     const textarea = page.getByTestId(TEST_SELECTORS.DESKTOP_CONFIG_TEXTAREA);
     await expect(textarea).toBeVisible();
+    await expect(
+      page.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
+        name: TEST_SELECTORS.BUTTONS.COPY_DASHBOARD_URL,
+      })
+    ).toBeVisible();
     await textarea.fill(
       JSON.stringify([
         {

@@ -82,7 +82,7 @@ Base: production host `https://desktop-ui-mf.vercel.app` (never `desktop-ui-eigh
 https://desktop-ui-mf.vercel.app/?desktopConfig=<encodeURIComponent(JSON.stringify(windowsArrayOrSnapshot))>
 ```
 
-Compact JSON (no spaces). Unique `id`s per window. Same `name` / remote is how you get two of a type.
+Compact JSON (no spaces). Unique `id`s per window. Same `name` / remote is how you get two of a type. The configurator **Copy URL** button builds this from the current desktop (`buildDesktopShareUrl`).
 
 Hard-refresh if an old host bundle still prefers localStorage over the query.
 

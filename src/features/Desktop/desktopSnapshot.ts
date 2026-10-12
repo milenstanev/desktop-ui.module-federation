@@ -261,6 +261,21 @@ export function serializeDesktopSnapshot(snapshot: DesktopSnapshot): string {
   );
 }
 
+export function buildDesktopShareUrl(
+  snapshot: DesktopSnapshot,
+  origin: string,
+  pathname: string = '/'
+): string {
+  const path = pathname.length > 0 ? pathname : '/';
+  const query = encodeURIComponent(
+    JSON.stringify({
+      windows: snapshot.windows,
+      layouts: snapshot.layouts,
+    })
+  );
+  return `${origin}${path}?${DESKTOP_CONFIG_QUERY_PARAM}=${query}`;
+}
+
 export function readDesktopConfigFromSearch(
   search: string
 ): DesktopSnapshot | null {

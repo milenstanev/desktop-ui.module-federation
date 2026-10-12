@@ -1,0 +1,93 @@
+.container {
+  display: flex;
+  gap: 1em;
+  align-items: center;
+  justify-content: center;
+  padding: 1em;
+}
+
+.value {
+  font-size: 2em;
+  font-weight: bold;
+  min-width: 3ch;
+  text-align: center;
+}
+
+.button {
+  padding: 0.5em 1em;
+  font-size: 1em;
+  cursor: pointer;
+  border: 2px solid var(--border, gray);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--border);
+  outline-offset: 2px;
+}
+
+/* Gradient Theme - Smart Counter Styles */
+[data-theme='gradient'] .container {
+  padding: 2em 1em;
+}
+
+[data-theme='gradient'] .value {
+  color: #ffffff;
+  font-size: 3em;
+  text-shadow:
+    0 0 20px rgba(59, 130, 246, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.4));
+}
+
+[data-theme='gradient'] .button {
+  background: rgba(59, 130, 246, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: white;
+  font-weight: 600;
+  padding: 0.75em 1.5em;
+  border-radius: 8px;
+  box-shadow:
+    0 4px 12px rgba(59, 130, 246, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+[data-theme='gradient'] .button:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.4);
+  border-color: rgba(59, 130, 246, 0.6);
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px rgba(59, 130, 246, 0.4),
+    0 0 20px rgba(59, 130, 246, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+[data-theme='gradient'] .button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow:
+    0 2px 8px rgba(59, 130, 246, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+[data-theme='gradient'] .button:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.8);
+  outline-offset: 3px;
+}

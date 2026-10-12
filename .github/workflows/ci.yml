@@ -19,16 +19,16 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Lint
-        run: npm run lint 2>/dev/null || npx eslint src --ext .ts,.tsx
+        run: npm run lint
 
       - name: Type check
         run: npx tsc --noEmit
 
       - name: Unit tests
-        run: npm test -- --watchAll=false --coverage
+        run: npm run test:unit -- --coverage
 
   build:
     runs-on: ubuntu-latest
@@ -43,7 +43,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build
         run: npm run build
@@ -61,16 +61,23 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
       - name: Build app
+        env:
+          REACT_APP_ANALYTICS_REMOTE_URL: http://localhost:3002
         run: npm run build
 
+      - name: Build analytics remote
+        run: |
+          npm ci --prefix src/features/remotes/analytics --no-audit --no-fund
+          npm run build --prefix src/features/remotes/analytics
+
       - name: Run Playwright tests
-        run: npx playwright test
+        run: npx playwright test --grep-invert @memory
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

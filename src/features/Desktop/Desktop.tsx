@@ -1,145 +1,171 @@
-import React, { lazy, useCallback, Suspense, useState, useEffect, useMemo } from 'react';
-import { useStore } from "react-redux";
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
+import { useStore } from 'react-redux';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { Responsive, WidthProvider } from 'react-grid-layout';
-import { useAppSelector, useAppDispatch } from "../../app/hooks";
+import { useAppSelector, useAppDispatch } from '~/core/hooks';
 import { removeWindow, updateLayouts, setFocus } from './DesktopSlice';
 import { LayoutBreakpoint, DesktopUIWindow } from './types';
-import WindowComponent from '../../components/Window';
-import { componentLoader, ComponentNames } from '../../utils/componentLoader';
-import { removeLazyLoadedReducer } from "../../utils/lazyLoadReducer";
-import type { StoreWithReducerManager } from "../../app/store";
+import WindowComponent from '~/shared/components/Window/Window';
+import ComponentLoader from '~/shared/components/ComponentLoader/ComponentLoader';
+import RemoteFeatureLoader from '~/app-shell/RemoteFeatureLoader';
+import { removeLazyLoadedReducer } from '~/core/utils/lazyLoadReducer';
+import type { StoreWithReducerManager } from '~/core/store';
 import styles from './Desktop.module.css';
+import { useTheme } from '~/core/contexts/ThemeContext';
+import { DESKTOP_STRINGS, LAYOUT_CONFIG } from '~/shared/constants';
+import { useKeyboardShortcuts } from '~/core/hooks/useKeyboardShortcuts';
+import { TEST_SELECTORS } from '~/shared/testSelectors';
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
-interface LazyLoadedComponentProps extends React.Attributes {
-  windowId: string;
-  windowName: string;
-  lazyLoadReducerName: string;
-}
-type LazyComponentType = React.ComponentType<LazyLoadedComponentProps>;
-
 const Desktop: React.FC = () => {
+  //region states
   const windows = useAppSelector((state) => state.Desktop.desktopWindows);
   const savedLayouts = useAppSelector((state) => state.Desktop.layouts);
-  const focusedWindowId = useAppSelector((state) => state.Desktop.focusedWindowId);
+  const focusedWindowId = useAppSelector(
+    (state) => state.Desktop.focusedWindowId
+  );
   const [breakpoint, setBreakpoint] = useState<LayoutBreakpoint>('lg');
+  //endregion
+
+  //region hooks
   const dispatch = useAppDispatch();
   const store = useStore();
+  const { theme } = useTheme();
+  const prevReducersRef = React.useRef<Set<string>>(new Set());
 
+  useKeyboardShortcuts(
+    () => {
+      if (focusedWindowId) dispatch(removeWindow(focusedWindowId));
+    },
+    () => {
+      if (focusedWindowId) dispatch(removeWindow(focusedWindowId));
+    },
+    !!focusedWindowId
+  );
+  //endregion
+
+  //region memos
   const windowsSorted = useMemo(() => {
     if (!focusedWindowId) return windows;
-    const focused = windows.find((w: DesktopUIWindow) => w.id === focusedWindowId);
+    const focused = windows.find(
+      (w: DesktopUIWindow) => w.id === focusedWindowId
+    );
     if (!focused) return windows;
-    const rest = windows.filter((w: DesktopUIWindow) => w.id !== focusedWindowId);
+    const rest = windows.filter(
+      (w: DesktopUIWindow) => w.id !== focusedWindowId
+    );
     return [...rest, focused];
   }, [windows, focusedWindowId]);
 
-  const loadWindow = useCallback((componentName: ComponentNames) => {
-    const loader = componentLoader[componentName];
+  const gridMargin = useMemo<[number, number]>(() => {
+    return theme === 'gradient' ? [20, 20] : [10, 10];
+  }, [theme]);
 
-    if (loader) {
-      return lazy(() =>
-        loader().then((module) => {
-          return { default: module.default as LazyComponentType };
-        })
-      );
-    } else {
-      throw new Error(`Unknown component: ${componentName}`);
-    }
-  },[]);
+  const containerPadding = useMemo<[number, number]>(() => {
+    return theme === 'gradient' ? [20, 20] : [10, 10];
+  }, [theme]);
 
-  const handleRemoveWindow = useCallback((id: string, lazyLoadReducerName: string) => {
-    dispatch(removeWindow(id));
+  const windowStyles = useMemo(() => {
+    const map = new Map<string, React.CSSProperties>();
+    windowsSorted.forEach((w: DesktopUIWindow) => {
+      map.set(w.id, {
+        zIndex:
+          w.id === focusedWindowId
+            ? LAYOUT_CONFIG.Z_INDEX_FOCUSED
+            : LAYOUT_CONFIG.Z_INDEX_NORMAL,
+      });
+    });
+    return map;
+  }, [windowsSorted, focusedWindowId]);
+  //endregion
 
-    const componentWithSameReducer = windows.find((window: DesktopUIWindow) => (
-      window.lazyLoadReducerName === lazyLoadReducerName && window.id !== id
-    ));
-    if (!componentWithSameReducer) {
-      removeLazyLoadedReducer(store as StoreWithReducerManager, lazyLoadReducerName);
-    }
-  }, [dispatch, store, windows]);
+  //region callbacks
+  const handleRemoveWindow = useCallback(
+    (id: string) => dispatch(removeWindow(id)),
+    [dispatch]
+  );
+
+  const handleFocusWindow = useCallback(
+    (id: string) => dispatch(setFocus(id)),
+    [dispatch]
+  );
+
+  const handleLayoutChange = useCallback(
+    (layout: ReactGridLayout.Layout[]) => {
+      dispatch(updateLayouts({ layout, breakpoint }));
+    },
+    [dispatch, breakpoint]
+  );
+
+  const handleBreakpointChange = useCallback(
+    (newBreakpoint: LayoutBreakpoint) => setBreakpoint(newBreakpoint),
+    []
+  );
+  //endregion
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!focusedWindowId) return;
-      if (e.key === 'Escape' || (e.key === 'w' && (e.metaKey || e.ctrlKey))) {
-        e.preventDefault();
-        const win = windows.find((w: DesktopUIWindow) => w.id === focusedWindowId);
-        if (win) {
-          dispatch(removeWindow(focusedWindowId));
-          const componentWithSameReducer = windows.find(
-            (w: DesktopUIWindow) => w.lazyLoadReducerName === win.lazyLoadReducerName && w.id !== focusedWindowId
-          );
-          if (!componentWithSameReducer) {
-            removeLazyLoadedReducer(store as StoreWithReducerManager, win.lazyLoadReducerName ?? '');
-          }
-        }
+    const currentReducers = new Set<string>();
+    windows.forEach((window: DesktopUIWindow) => {
+      if (window.lazyLoadReducerName) {
+        currentReducers.add(window.lazyLoadReducerName);
       }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedWindowId, windows, dispatch, store]);
-
-  const handleFocusWindow = useCallback((id: string) => {
-    dispatch(setFocus(id));
-  }, [dispatch]);
-
-  /*const layouts: Layouts = useMemo(() => {
-    const layoutsData: Layouts = { lg: [], md: [], sm: [], };
-    let xPosition = -1;
-
-    windows.forEach((window: DesktopUIWindow, index: number) => {
-      xPosition++;
-      if (xPosition > 2) {
-        xPosition = 0;
-      }
-      layoutsData.lg.push({ i: `${window.id}`, x: xPosition * 4, y: index, w: 4, h: 2 });
-      layoutsData.md.push({ i: `${window.id}`, x: xPosition * 4, y: index, w: 4, h: 2 });
-      layoutsData.sm.push({ i: `${window.id}`, x: xPosition * 4, y: index, w: 1, h: 1 });
     });
-    return layoutsData;
-  }, [windows]);*/
+
+    const reducersToRemove = Array.from(prevReducersRef.current).filter(
+      (reducerName) => !currentReducers.has(reducerName)
+    );
+    reducersToRemove.forEach((reducerName) => {
+      removeLazyLoadedReducer(store as StoreWithReducerManager, reducerName);
+    });
+    prevReducersRef.current = currentReducers;
+  }, [windows, store]);
 
   return (
-    <div className={styles.desktop}>
+    <div
+      className={styles.desktop}
+      data-testid={TEST_SELECTORS.DESKTOP_CONTAINER}
+      role="application"
+      aria-label={DESKTOP_STRINGS.DESKTOP_ARIA_LABEL}
+    >
       <ResponsiveReactGridLayout
-        cols={{ lg: 12, md: 8, sm: 2 }}
+        cols={LAYOUT_CONFIG.COLS}
         layouts={savedLayouts}
-        breakpoints={{ lg: 1200, md: 996, sm: 768 }}
-        onDragStop={(layout) => {
-          dispatch(updateLayouts({ layout, breakpoint }));
-        }}
-        onResizeStop={(layout) => {
-          dispatch(updateLayouts({ layout, breakpoint }));
-        }}
-        onBreakpointChange={(newBreakpoint: LayoutBreakpoint) => setBreakpoint(newBreakpoint)}
-        draggableHandle=".drag-handle"
+        breakpoints={LAYOUT_CONFIG.BREAKPOINTS}
+        rowHeight={80}
+        margin={gridMargin}
+        containerPadding={containerPadding}
+        onDragStop={handleLayoutChange}
+        onResizeStop={handleLayoutChange}
+        onBreakpointChange={handleBreakpointChange}
+        draggableHandle={`.${LAYOUT_CONFIG.DRAG_HANDLE_CLASS}`}
       >
         {windowsSorted.map((window: DesktopUIWindow) => (
-          <div key={window.id} style={{ zIndex: window.id === focusedWindowId ? 10 : 1 }}>
+          <div key={window.id} style={windowStyles.get(window.id)}>
             <WindowComponent
               name={window.name}
               id={window.id}
               removeWindow={handleRemoveWindow}
               lazyLoadReducerName={window.lazyLoadReducerName}
               isFocused={window.id === focusedWindowId}
-              onFocus={() => handleFocusWindow(window.id)}
+              onFocus={handleFocusWindow}
             >
-              <Suspense fallback={<div>Loading...</div>}>
-                {window.lazyLoadComponent && (
-                  React.createElement(
-                    loadWindow(window.lazyLoadComponent),
-                    {
-                      windowId: window.id,
-                      windowName: window.name,
-                      lazyLoadReducerName: window.lazyLoadReducerName,
-                    } as LazyLoadedComponentProps
-                  )
-                )}
-              </Suspense>
+              {window.lazyLoadComponent && (
+                <ComponentLoader
+                  componentName={window.lazyLoadComponent}
+                  windowId={window.id}
+                  windowName={window.name}
+                  lazyLoadReducerName={window.lazyLoadReducerName}
+                />
+              )}
+              {window.remoteFeatureName && (
+                <RemoteFeatureLoader
+                  remoteFeatureName={window.remoteFeatureName}
+                  windowId={window.id}
+                  windowName={window.name}
+                />
+              )}
             </WindowComponent>
           </div>
         ))}
@@ -149,4 +175,3 @@ const Desktop: React.FC = () => {
 };
 
 export default Desktop;
-

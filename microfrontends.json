@@ -1,0 +1,20 @@
+{
+  "$schema": "https://openapi.vercel.sh/microfrontends.json",
+  "applications": {
+    "desktop-ui": {
+      "packageName": "desktop-ui",
+      "development": {
+        "fallback": "desktop-ui-eight.vercel.app"
+      }
+    },
+    "analytics-remote": {
+      "packageName": "analytics-remote",
+      "routing": [
+        {
+          "group": "analytics-remote",
+          "paths": ["/remote", "/remote/:path*"]
+        }
+      ]
+    }
+  }
+}

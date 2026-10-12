@@ -1,0 +1,90 @@
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4.5rem 1rem 1rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.dialog {
+  width: min(720px, 100%);
+  max-height: calc(100vh - 6rem);
+  overflow: auto;
+  padding: 1.25rem;
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 8px;
+  background: var(--bg, #fff);
+  color: var(--text, #0f172a);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.25);
+}
+
+[data-theme='gradient'] .dialog {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  backdrop-filter: blur(16px);
+}
+
+.title {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.help {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  opacity: 0.85;
+}
+
+.textareaLabel {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 220px;
+  padding: 0.75rem;
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 6px;
+  background: var(--bg, #fff);
+  color: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  resize: vertical;
+}
+
+.textarea:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.status,
+.error {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+}
+
+.error {
+  color: #ef4444;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}

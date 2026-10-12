@@ -1,0 +1,119 @@
+/* FormEditor preview – submit button and theme overrides only. Base form styles live in ~/shared/forms. */
+
+.submitBtn {
+  margin-top: 1em;
+}
+
+/* Gradient Theme - Glassmorphism Form Styles */
+[data-theme='gradient'] .formItem label {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='gradient'] .formItem input,
+[data-theme='gradient'] .formItem select {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+[data-theme='gradient'] .formItem input::placeholder,
+[data-theme='gradient'] .formItem select::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme='gradient'] .formItem input:hover,
+[data-theme='gradient'] .formItem select:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+[data-theme='gradient'] .formItem input:focus,
+[data-theme='gradient'] .formItem select:focus {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(59, 130, 246, 0.6);
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.3),
+    0 4px 12px rgba(59, 130, 246, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+[data-theme='gradient'] .formItem select option {
+  background-color: #1e3a8a;
+  color: white;
+  padding: 0.5em;
+}
+
+[data-theme='gradient'] .formItem input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+[data-theme='gradient'] .error {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.15);
+  padding: 0.5em 0.75em;
+  border-radius: 6px;
+  border-left: 1px solid rgba(239, 68, 68, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+[data-theme='gradient'] .formItem input[aria-invalid='true'],
+[data-theme='gradient'] .formItem select[aria-invalid='true'] {
+  border-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.1);
+  box-shadow:
+    0 0 0 3px rgba(239, 68, 68, 0.2),
+    0 0 0 1px rgba(239, 68, 68, 0.3) inset;
+}
+
+[data-theme='gradient'] .submitBtn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  padding: 0.75em 1.5em;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow:
+    0 4px 12px rgba(59, 130, 246, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+[data-theme='gradient'] .submitBtn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px rgba(59, 130, 246, 0.4),
+    0 0 20px rgba(59, 130, 246, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+}
+
+[data-theme='gradient'] .submitBtn:active {
+  transform: translateY(0);
+  box-shadow:
+    0 2px 8px rgba(59, 130, 246, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+[data-theme='gradient'] .submitBtn:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}

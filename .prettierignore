@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+build/
+dist/
+coverage/
+
+# Generated files
+package-lock.json
+
+# Test results
+test-results/
+playwright-report/
+
+# Logs
+*.log

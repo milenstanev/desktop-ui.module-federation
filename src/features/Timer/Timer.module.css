@@ -1,16 +1,89 @@
 .timer {
-  padding: 0.5em 0;
+  padding: 1em 0;
   text-align: center;
 }
 
 .display {
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-variant-numeric: tabular-nums;
-  margin-bottom: 0.75em;
+  margin-bottom: 1em;
+  font-weight: 600;
 }
 
 .controls {
   display: flex;
-  gap: 0.5em;
+  gap: 0.75em;
   justify-content: center;
+  flex-wrap: wrap;
+}
+
+.controls button {
+  padding: 0.6em 1.2em;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--bg);
+  color: var(--text);
+  font-size: 0.95em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.controls button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.controls button:active {
+  transform: translateY(0);
+}
+
+/* Gradient Theme - Smart Timer Styles */
+[data-theme='gradient'] .timer {
+  padding: 2em 1em;
+}
+
+[data-theme='gradient'] .display {
+  color: #ffffff;
+  font-size: 3rem;
+  text-shadow:
+    0 0 30px rgba(139, 92, 246, 0.8),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.5));
+  letter-spacing: 0.05em;
+}
+
+[data-theme='gradient'] .controls button {
+  background: rgba(59, 130, 246, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: white;
+  font-weight: 600;
+  padding: 0.75em 1.5em;
+  border-radius: 8px;
+  box-shadow:
+    0 4px 12px rgba(59, 130, 246, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+[data-theme='gradient'] .controls button:hover {
+  background: rgba(59, 130, 246, 0.4);
+  border-color: rgba(59, 130, 246, 0.6);
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px rgba(59, 130, 246, 0.4),
+    0 0 20px rgba(59, 130, 246, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+[data-theme='gradient'] .controls button:active {
+  transform: translateY(0);
+  box-shadow:
+    0 2px 8px rgba(59, 130, 246, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }

@@ -10,7 +10,19 @@
 
 .input {
   flex: 1;
-  padding: 0.35em 0.5em;
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--bg);
+  color: var(--text);
+  font-size: 0.95em;
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-color: #3b82f6;
 }
 
 .list {
@@ -23,8 +35,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.35em 0;
-  border-bottom: 1px solid var(--border, #eee);
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--border, #eee);
+  border-radius: 6px;
+  margin-bottom: 0.5em;
+  transition: all 0.2s ease;
+}
+
+.item:hover {
+  background-color: rgba(59, 130, 246, 0.05);
 }
 
 .item span {
@@ -34,4 +53,107 @@
 
 .item button {
   margin-left: 0.5em;
+  padding: 0.4em 0.8em;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background-color: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.item button:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* Gradient Theme - Smart Notes Styles */
+[data-theme='gradient'] .input {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+[data-theme='gradient'] .input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme='gradient'] .input:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+[data-theme='gradient'] .input:focus {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(59, 130, 246, 0.6);
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.3),
+    0 4px 12px rgba(59, 130, 246, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+[data-theme='gradient'] .item {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='gradient'] .item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: translateX(4px);
+}
+
+[data-theme='gradient'] .item span {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme='gradient'] .item button {
+  background: rgba(239, 68, 68, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
+}
+
+[data-theme='gradient'] .item button:hover {
+  background: rgba(239, 68, 68, 0.4);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #ffffff;
+  box-shadow:
+    0 4px 12px rgba(239, 68, 68, 0.3),
+    0 0 10px rgba(239, 68, 68, 0.2);
+}
+
+[data-theme='gradient'] .form button {
+  background: rgba(59, 130, 246, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: white;
+  padding: 0.5em 1.2em;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+[data-theme='gradient'] .form button:hover {
+  background: rgba(59, 130, 246, 0.4);
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow:
+    0 4px 12px rgba(59, 130, 246, 0.3),
+    0 0 15px rgba(59, 130, 246, 0.3);
 }

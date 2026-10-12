@@ -3,31 +3,80 @@
   --bg: #ffffff;
   --text: #333333;
   --border: #cccccc;
+  --window-focused-border: rgba(0, 102, 204, 0.4);
+  --window-focused-ring: rgba(0, 102, 204, 0.15);
 }
 
-[data-theme="dark"] {
+[data-theme='dark'] {
   --bg: #1a1a1a;
   --text: #e0e0e0;
   --border: #444444;
+  --window-focused-border: rgba(59, 130, 246, 0.4);
+  --window-focused-ring: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme='gradient'] {
+  --bg: linear-gradient(135deg, #1e3a8a 0%, #5b21b6 100%);
+  --text: #ffffff;
+  --border: rgba(255, 255, 255, 0.15);
+  --window-focused-border: rgba(59, 130, 246, 0.35);
+  --window-focused-ring: rgba(59, 130, 246, 0.2);
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
 }
 
 body {
   margin: 0;
-  padding: 0.5em;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  padding: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg);
+  background: var(--bg);
   color: var(--text);
+  min-height: 100vh;
+}
+
+[data-theme='gradient'] body {
+  position: relative;
+}
+
+[data-theme='gradient'] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #1e3a8a 0%, #5b21b6 100%);
+  z-index: -1;
+}
+
+/* Glassmorphism effect for gradient theme */
+[data-theme='gradient'] body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(
+      circle at 20% 50%,
+      rgba(59, 130, 246, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(139, 92, 246, 0.1) 0%,
+      transparent 50%
+    );
+  pointer-events: none;
+  z-index: -1;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
-.text-center {
-  text-align: center;
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }

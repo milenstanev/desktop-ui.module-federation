@@ -1,67 +1,270 @@
-# Desktop UI
+# desktop-ui
 
-A **modular workspace UI** built with React and Redux where each “window” is a lazily loaded feature: its component and Redux slice are loaded only when the window is opened, and removed when the last window of that type is closed. The project demonstrates **dynamic reducer injection**, **code splitting by feature**, and **persistent layout** without a backend.
+![React](https://img.shields.io/badge/React-18-61dafb?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-## Why This Project Exists
+**A starter template for scalable React applications.** Clone it, customize it, and start building serious projects without reinventing architecture, testing, or documentation.
 
-- **Bundle size**: Only the Desktop shell and grid load upfront; feature code (Notes, Timer, counters) loads on demand. Redux state for a feature exists only while at least one window of that type is open.
-- **Scalability**: New features are added as self-contained folders under `features/` with their own slice (optional), tests, and a single entry in the component loader—no changes to core store or routing.
-- **Maintainability**: Persistence is handled by middleware so reducers stay pure; window focus and keyboard shortcuts are centralized; UI copy and test selectors share constants to avoid drift.
+This project aims to provide a scalable starting point for large React applications, emphasizing modular architecture, isolated state domains, and maintainable testing infrastructure.
 
-## Technical Decisions & Impact
+- **Modular architecture** – Feature-based structure, dynamic reducer injection, lazy loading
+- **Documentation** – [Architecture](./docs/ARCHITECTURE.md), [ADRs](./docs/decisions/0001-dynamic-reducer-injection.md), [Best Practices](./docs/BEST_PRACTICES.md), and [full index](#-documentation)
+- **Testing infrastructure** – Jest, React Testing Library, Playwright E2E, memory/performance tests
 
-| Decision | Rationale | Impact |
-|----------|-----------|--------|
-| **Custom reducer manager** | Redux’s `combineReducers` is static; we need to add/remove slices when windows open/close. | Smaller initial state and bundle; feature state is created and torn down with the feature. |
-| **Middleware for persistence** | Writing to `localStorage` inside reducers would mix side effects with state updates. | Reducers stay pure and testable; persistence is one place and easy to swap (e.g. to IndexedDB). |
-| **Lazy component + lazy reducer** | A feature’s component and state should load together. | No “empty” slice at startup; clear lifecycle per feature. |
-| **Per-window ErrorBoundary** | A bug in one feature shouldn’t take down the whole grid. | Isolated failures; user can close the broken window and keep working. |
-| **Single drag handle (title bar)** | Making the whole header draggable would block button clicks. | Predictable UX: drag by title, click buttons without starting a drag. |
+Built with React, TypeScript, and Redux. PWA-ready. → [Full docs index](#-documentation)
 
-## Tech Stack
+---
 
-- **React 18** (TypeScript), **Redux Toolkit**, **react-grid-layout**
-- **Testing**: Jest + React Testing Library (unit), Playwright (E2E)
-- **CI**: GitHub Actions (lint, typecheck, unit tests, E2E tests, build)
+## 🚀 Quick Start
 
-## Getting Started
-
-**Prerequisites:** Node.js 16+, npm 7+
+Clone the repository and install dependencies:
 
 ```bash
+git clone <your-repo-url>
+cd desktop-ui
 npm install
-npm start   # http://localhost:3000
 ```
 
-| Script | Description |
-|--------|-------------|
-| `npm start` | Dev server |
-| `npm test` | Unit tests (watch) |
-| `npm run build` | Production build |
-| `npm run lint` | ESLint |
-| `npx playwright test` | E2E (run with app on port 3000) |
+Start the development server:
 
-## Project Structure
-
-```
-src/
-├── app/           # Store (with reducer manager), shell, header, footer
-├── components/    # Shared: Window, ErrorBoundary
-├── features/      # One folder per feature (Desktop, Notes, Timer, …)
-├── contexts/     # Theme (light/dark)
-├── hooks/         # useLazyLoadReducer
-├── middleware/    # Desktop persistence to localStorage
-└── utils/         # reducerManager, lazyLoadReducer, componentLoader
+```bash
+npm run start
 ```
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for the high-level diagram and “Why this structure?”.
+Run tests:
 
-## Docs
+```bash
+npm run test:unit      # Unit tests (Jest)
+npm run test:e2e       # E2E tests (Playwright)
+npm run test:all       # Unit + E2E
+```
 
-- [Architecture & diagram](./ARCHITECTURE.md)
-- [Why this structure?](./ARCHITECTURE.md#why-this-structure)
-- [Performance & benchmarks](./docs/PERFORMANCE.md)
-- [ADRs](./docs/decisions/)
-- [Feature components](./docs/FEATURE_COMPONENTS.md)
-- [Implemented features](./docs/IMPLEMENTED_FEATURES.md)
-- [Future features](./docs/FUTURE_FEATURES.md)
+---
+
+## 🧠 Why This Starter Exists
+
+Most React starters are either too minimal (no structure) or too opinionated (framework lock-in). Large applications often hit the same problems:
+
+- **Global state bloat** – Every feature adds to a single Redux store
+- **Unclear module boundaries** – Features become interdependent, changes get risky
+- **No testing story** – E2E and performance tests bolted on later
+- **Scaling pain** – Initial bundle grows, teams step on each other
+
+This starter provides a structured foundation for building scalable React applications without reinventing architecture or tooling.
+
+---
+
+## 👥 Who This Is For
+
+This starter is designed for:
+
+- Teams building large React applications
+- SaaS platforms and dashboards
+- Multi-team frontend development
+- Long-lived frontend platforms
+
+---
+
+## 🏗 Architectural Goals
+
+The main objectives were:
+
+- Feature-based module boundaries
+- Isolated state domains per module
+- Dynamic feature injection
+- Lazy loading & performance-aware rendering
+- Scalable structure for independent evolution
+
+---
+
+## ⚙️ How It Works (Quick Overview)
+
+1. The application boots with a minimal core.
+2. Features are dynamically loaded when required.
+3. Each feature injects its own reducer into the store.
+4. State remains isolated to prevent global coupling.
+5. Unused modules are not part of the initial bundle.
+
+```
+     Application Core (App, Store, Router)
+                    │
+                    ▼
+            Component Loader (feature registry)
+                    │
+        ┌───────────┼───────────┬───────────┐
+        ▼           ▼           ▼           ▼
+     Counter    FormEditor    Notes      Timer
+     Module      Module      Module     Module
+   (lazy)      (lazy)      (lazy)     (lazy)
+```
+
+---
+
+## 📂 Example Feature Module
+Each feature is self-contained. When you add a new feature, follow this structure:
+
+```
+src/features/MyFeature/
+├── __tests__/
+│   ├── unit/           # Jest unit tests
+│   │   └── MyFeature.test.tsx
+│   └── e2e/            # Playwright E2E tests (optional)
+│       └── my-feature.spec.ts
+├── MyFeature.tsx       # Main component
+├── MyFeatureSlice.ts   # Redux slice (optional)
+├── MyFeature.module.css
+└── README.md           # Feature docs (optional)
+```
+
+Register the feature in `src/core/utils/componentLoader.ts` and add a button in the header. See [Module System](./docs/FEATURE_COMPONENTS.md) for details.
+
+---
+
+## 📦 Core Concepts
+
+### 1️⃣ Feature-Based Structure
+
+Each feature is treated as an independent module with:
+
+- Its own state logic
+- Clear responsibility
+- Encapsulated domain boundaries
+
+This reduces cross-feature coupling.
+
+---
+
+### 2️⃣ Dynamic Reducer Injection
+
+Instead of a single monolithic global store, reducers are injected dynamically as modules are loaded.
+
+Benefits:
+- Prevents unnecessary state bloat
+- Improves scalability
+- Allows independent feature evolution
+
+Trade-off:
+- Slightly increased architectural complexity
+
+---
+
+### 3️⃣ Lazy Loading
+
+Modules are loaded on demand using dynamic imports.
+
+Benefits:
+- Reduced initial bundle size
+- Improved perceived performance
+- Better scalability for large systems
+
+---
+
+### 4️⃣ Performance & Memory Awareness
+
+The architecture enforces controlled rendering boundaries and encourages explicit module ownership through:
+
+- Isolated module lifecycles
+- Reduced unnecessary global state updates
+- Memory-aware cleanup patterns
+
+---
+
+## 🔌 PWA Support
+
+The project includes Progressive Web App configuration to explore:
+
+- Offline readiness
+- Caching strategies
+- Production-like deployment behavior
+
+---
+
+## ⚖️ Trade-Offs
+
+This architecture increases:
+
+- Structural complexity
+- Initial setup overhead
+- Mental model requirements for contributors
+
+It is not ideal for:
+
+- Small applications
+- Rapid prototypes
+- Simple CRUD dashboards
+
+It is intended for:
+- Large enterprise systems
+- Multi-team development environments
+- Long-term maintainability focus
+
+---
+
+## 🚀 When to Use This Pattern
+
+Consider this approach when:
+
+- The application is expected to grow significantly
+- Multiple teams (3+) contribute to the same frontend
+- Feature isolation is critical for independent releases
+- Long-term maintainability outweighs initial simplicity
+- You've experienced the pain of refactoring a 100k+ LOC monolithic SPA
+
+---
+
+## 🧪 Testing Strategy
+
+- Unit testing with Jest
+- Component testing
+- E2E testing with Playwright
+- Architectural boundaries validated via modular isolation
+
+---
+
+## 🔭 Future Exploration
+
+Potential areas of expansion:
+
+- Runtime module federation comparison
+- Independent deployment pipelines
+- Advanced performance instrumentation
+- DevTools visualization of injected modules
+
+---
+
+## 📌 Using This Starter
+
+Use this as your foundation. The architecture, docs, and tests are there so you can start a serious project without bootstrapping from scratch. Adapt patterns to your needs; the structure is meant to scale with you.
+
+---
+
+## 📚 Documentation
+
+### Architecture
+- [Architecture Overview](./docs/ARCHITECTURE.md) – Patterns, structure, and design decisions
+- [Module System](./docs/FEATURE_COMPONENTS.md) – How to add and structure features
+- [State Management](./docs/MIDDLEWARE_PERSISTENCE.md) – Persistence and reducer injection  
+- [Architecture Decision Records](./docs/decisions/0001-dynamic-reducer-injection.md) – ADRs for key choices (reducer injection, storage, error boundaries)
+
+### Development
+- [Best Practices](./docs/BEST_PRACTICES.md) – Code quality and conventions
+- [Configuration](./docs/CONFIGURATION.md) – Environment and settings
+- [Debugging](./docs/DEBUGGING.md) – Breakpoints and dev setup
+- [API & Hooks](./docs/API_DOCUMENTATION.md) – Hooks and utilities reference
+- [PWA Guide](./docs/PWA_GUIDE.md) – Progressive Web App setup
+
+### Testing
+- [E2E Tests](./docs/WINDOW_INTERACTIONS_TESTS.md) – Playwright and window interaction patterns
+- [Performance Testing](./docs/PERFORMANCE.md) – Web Vitals, optimization, and memory testing
+
+### Features & Reference
+- [Implemented Features](./docs/IMPLEMENTED_FEATURES.md) – Current feature set
+- [Mock API](./docs/MOCK_API.md) – Mock API for FormEditor and demos
+- [Shared Forms](./src/shared/forms/README.md) – Reusable form components
+
+---
+
+## 📬 Feedback
+
+I welcome discussions and architectural feedback from other engineers exploring modular SPA or micro-frontend strategies.

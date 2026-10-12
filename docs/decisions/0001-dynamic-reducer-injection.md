@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-Windows can load different features (e.g. ComponentLazy2, ComponentLazy3), each with its own Redux slice. Loading all slices upfront would increase bundle size and state complexity.
+Windows can load different features (e.g. Counter, FormEditor, Notes), each with its own Redux slice. Loading all slices upfront would increase bundle size and state complexity.
 
 ## Decision
 

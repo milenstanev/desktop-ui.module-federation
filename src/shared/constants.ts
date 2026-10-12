@@ -10,6 +10,20 @@ export const APP_STRINGS = {
   ORGANIZE_GRID_BUTTON: 'Organize windows in grid',
   RESET_LAYOUT_BUTTON: 'Reset window layouts',
   CLOSE_ALL_BUTTON: 'Close all windows',
+  CONFIGURATOR_BUTTON: 'Dashboard layout JSON',
+  CONFIGURATOR_BUTTON_SHORT: 'JSON',
+  CONFIGURATOR_TITLE: 'Dashboard configuration',
+  CONFIGURATOR_HELP:
+    'Paste a JSON snapshot to replace the current windows and layouts. Saved JSON becomes the initial dashboard after Close All and reload.',
+  CONFIGURATOR_APPLY: 'Apply JSON',
+  CONFIGURATOR_COPY: 'Copy current JSON',
+  CONFIGURATOR_DEFAULT: 'Use built-in dashboard',
+  CONFIGURATOR_CLOSE: 'Close configurator',
+  CONFIGURATOR_TEXTAREA_LABEL: 'Dashboard JSON',
+  CONFIGURATOR_INVALID: 'That JSON is not a valid dashboard configuration.',
+  CONFIGURATOR_APPLIED: 'Dashboard configuration applied.',
+  CONFIGURATOR_COPIED: 'Current dashboard JSON is in the editor.',
+  CONFIGURATOR_RESTORED: 'Built-in dashboard restored.',
 } as const;
 
 export const APP_TEST = {

@@ -23,6 +23,7 @@ import {
   removeAllWindows,
   organizeGrid,
 } from '~/features/Desktop/DesktopSlice';
+import DesktopConfigurator from '~/features/Desktop/DesktopConfigurator';
 import { useTheme, Theme } from '~/core/contexts/ThemeContext';
 import {
   APP_STRINGS,
@@ -226,6 +227,7 @@ const Header: React.FC = () => {
             <X size={16} />
             {theme === 'gradient' && <span>Close All</span>}
           </button>
+          <DesktopConfigurator />
         </div>
       </div>
       <div className={styles.buttonGroup}>

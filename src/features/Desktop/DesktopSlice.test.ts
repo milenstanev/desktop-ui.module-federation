@@ -6,6 +6,7 @@ import reducer, {
   resetLayouts,
   removeAllWindows,
   organizeGrid,
+  applyDesktopConfig,
 } from './DesktopSlice';
 import type { DesktopUIWindow } from './types';
 import { LAYOUT_CONFIG, REDUCER_NAMES } from '~/shared/constants';
@@ -183,6 +184,29 @@ describe('DesktopSlice', () => {
     expect(lgLayout1.y).toBe(0);
     expect(lgLayout1.w).toBe(3);
     expect(lgLayout1.h).toBe(3);
+  });
+
+  it('applyDesktopConfig replaces windows and layouts', () => {
+    const state = reducer(
+      initialState,
+      applyDesktopConfig({
+        windows: [createWindow({ id: TEST_WINDOW_IDS.W2 })],
+        layouts: {
+          xl: [{ i: TEST_WINDOW_IDS.W2, x: 1, y: 2, w: 3, h: 4 }],
+          lg: [{ i: TEST_WINDOW_IDS.W2, x: 1, y: 2, w: 3, h: 4 }],
+          md: [{ i: TEST_WINDOW_IDS.W2, x: 0, y: 0, w: 4, h: 4 }],
+          sm: [{ i: TEST_WINDOW_IDS.W2, x: 0, y: 0, w: 2, h: 4 }],
+        },
+      })
+    );
+    expect(state[WINDOWS_PROPERTY]).toHaveLength(1);
+    expect(state[WINDOWS_PROPERTY][0].id).toBe(TEST_WINDOW_IDS.W2);
+    expect(state[LAYOUTS_PROPERTY].lg[0]).toMatchObject({
+      i: TEST_WINDOW_IDS.W2,
+      x: 1,
+      y: 2,
+    });
+    expect(state[FOCUSED_WINDOW_PROPERTY]).toBe(TEST_WINDOW_IDS.W2);
   });
 
   it('resetLayouts resets windows to default positions', () => {

@@ -48,6 +48,10 @@ export const TEST_SELECTORS = {
   WINDOW_CONTENT: 'window-content',
   WINDOW_CLOSE_BUTTON: 'window-close-button',
 
+  DESKTOP_CONFIG_DIALOG: 'desktop-config-dialog',
+  DESKTOP_CONFIG_TEXTAREA: 'desktop-config-textarea',
+  DESKTOP_CONFIG_STATUS: 'desktop-config-status',
+
   // Test constants
   PAGE_TITLE: 'Desktop UI – Modular React Starter',
   HEADING_SELECTOR: 'H1',
@@ -93,6 +97,10 @@ export const TEST_SELECTORS = {
     ORGANIZE_GRID: /organize/i,
     RESET_LAYOUT: /reset window layouts/i,
     CLOSE_ALL: /close all/i,
+    DASHBOARD_CONFIG: /dashboard layout json/i,
+    APPLY_DASHBOARD_JSON: /apply json/i,
+    COPY_DASHBOARD_JSON: /copy current json/i,
+    DEFAULT_DASHBOARD: /use built-in dashboard/i,
     CLOSE_WINDOW: /close window/i,
     START_TIMER: /start/i,
     PAUSE_TIMER: /pause/i,

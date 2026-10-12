@@ -63,7 +63,7 @@
   background: rgba(239, 68, 68, 0.15);
   padding: 0.5em 0.75em;
   border-radius: 6px;
-  border-left: 3px solid #ef4444;
+  border-left: 1px solid rgba(239, 68, 68, 0.5);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);

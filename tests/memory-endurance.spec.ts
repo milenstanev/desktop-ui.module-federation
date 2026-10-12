@@ -5,7 +5,7 @@
  * Measures memory growth over thousands of operations.
  *
  * This is the REAL memory leak test.
- * 
+ *
  * Run manually with: npm run test:memory
  * Excluded from CI due to long execution time.
  */
@@ -30,6 +30,24 @@ async function getMemoryUsage(page: any) {
 
 function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
+
+async function tryLoadAnalyticsFeature(page: any): Promise<boolean> {
+  try {
+    const archBtn = page.getByRole('button', { name: /Architecture/i });
+    await archBtn.click();
+    await page.waitForTimeout(300);
+    const loadBtn = page.getByRole('button', {
+      name: /Load Analytics Feature/i,
+    });
+    await loadBtn.waitFor({ state: 'visible', timeout: 2000 });
+    await loadBtn.click();
+    await page.waitForTimeout(500);
+    await archBtn.click();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 test.describe('Memory Endurance Test', { tag: '@memory' }, () => {
@@ -65,6 +83,7 @@ test.describe('Memory Endurance Test', { tag: '@memory' }, () => {
 
     let totalAdded = 0;
     let totalRemoved = 0;
+    let totalAnalyticsAdded = 0;
 
     for (let i = 0; i < 10000; i++) {
       try {
@@ -89,25 +108,44 @@ test.describe('Memory Endurance Test', { tag: '@memory' }, () => {
           // Keep 3-15 windows at all times
           if (windowCount > 15) {
             // Force remove
-            await page.getByTestId(TEST_SELECTORS.WINDOW_CLOSE_BUTTON).first().click();
+            await page
+              .getByTestId(TEST_SELECTORS.WINDOW_CLOSE_BUTTON)
+              .first()
+              .click();
             totalRemoved++;
           } else if (windowCount < 3) {
-            // Force add - pick random component type
+            // Force add - pick random component or Load Analytics
+            const added =
+              action < 0.2 ? await tryLoadAnalyticsFeature(page) : false;
+            if (added) {
+              totalAnalyticsAdded++;
+              totalAdded++;
+            } else {
+              const randomButton =
+                componentNames[
+                  Math.floor(Math.random() * componentNames.length)
+                ];
+              await page.click(
+                `text=Add ${randomButton.replace(/([A-Z])/g, ' $1').trim()}`
+              );
+              totalAdded++;
+            }
+          } else if (action < 0.35) {
+            // 35%: Add random local window
             const randomButton =
               componentNames[Math.floor(Math.random() * componentNames.length)];
             await page.click(
               `text=Add ${randomButton.replace(/([A-Z])/g, ' $1').trim()}`
             );
             totalAdded++;
-          } else if (action < 0.4) {
-            // 40%: Add random window
-            const randomButton =
-              componentNames[Math.floor(Math.random() * componentNames.length)];
-            await page.click(
-              `text=Add ${randomButton.replace(/([A-Z])/g, ' $1').trim()}`
-            );
-            totalAdded++;
-          } else if (action < 0.8) {
+          } else if (action < 0.45) {
+            // 10%: Load Analytics (remote micro-frontend)
+            const added = await tryLoadAnalyticsFeature(page);
+            if (added) {
+              totalAnalyticsAdded++;
+              totalAdded++;
+            }
+          } else if (action < 0.85) {
             // 40%: Remove random window
             const closeButtons = await page
               .getByTestId(TEST_SELECTORS.WINDOW_CLOSE_BUTTON)
@@ -121,7 +159,7 @@ test.describe('Memory Endurance Test', { tag: '@memory' }, () => {
               totalRemoved++;
             }
           } else {
-            // 20%: Switch theme
+            // 15%: Switch theme
             const currentTheme = await page
               .locator('#theme-select')
               .inputValue();
@@ -168,7 +206,9 @@ test.describe('Memory Endurance Test', { tag: '@memory' }, () => {
     console.log(`  Final Memory: ${formatBytes(finalMemory.usedJSHeapSize)}`);
     console.log(`  Total Growth: ${formatBytes(totalGrowth)}`);
     console.log(`  Final Windows: ${finalWindowCount}`);
-    console.log(`  Total Added: ${totalAdded}`);
+    console.log(
+      `  Total Added: ${totalAdded} (Analytics remotes: ${totalAnalyticsAdded})`
+    );
     console.log(`  Total Removed: ${totalRemoved}`);
     console.log(`  Operations: 10,000`);
 

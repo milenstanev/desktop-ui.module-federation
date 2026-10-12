@@ -5,9 +5,25 @@ export const APP_STRINGS = {
   BUTTON_ADD_FORM_EDITOR: 'Add Form Editor',
   BUTTON_ADD_NOTES: 'Add Notes',
   BUTTON_ADD_TIMER: 'Add Timer',
+  BUTTON_ADD_ANALYTICS: 'Add Analytics',
+  BUTTON_ADD_FORMS: 'Add Forms',
   ORGANIZE_GRID_BUTTON: 'Organize windows in grid',
   RESET_LAYOUT_BUTTON: 'Reset window layouts',
   CLOSE_ALL_BUTTON: 'Close all windows',
+  CONFIGURATOR_BUTTON: 'Dashboard layout JSON',
+  CONFIGURATOR_BUTTON_SHORT: 'JSON',
+  CONFIGURATOR_TITLE: 'Dashboard configuration',
+  CONFIGURATOR_HELP:
+    'Paste a JSON snapshot to replace the current windows and layouts. Saved JSON becomes the initial dashboard after Close All and reload.',
+  CONFIGURATOR_APPLY: 'Apply JSON',
+  CONFIGURATOR_COPY: 'Copy current JSON',
+  CONFIGURATOR_DEFAULT: 'Use built-in dashboard',
+  CONFIGURATOR_CLOSE: 'Close configurator',
+  CONFIGURATOR_TEXTAREA_LABEL: 'Dashboard JSON',
+  CONFIGURATOR_INVALID: 'That JSON is not a valid dashboard configuration.',
+  CONFIGURATOR_APPLIED: 'Dashboard configuration applied.',
+  CONFIGURATOR_COPIED: 'Current dashboard JSON is in the editor.',
+  CONFIGURATOR_RESTORED: 'Built-in dashboard restored.',
 } as const;
 
 export const APP_TEST = {
@@ -20,6 +36,8 @@ export const APP_TEST = {
   BUTTON_ADD_FORM_EDITOR: new RegExp(APP_STRINGS.BUTTON_ADD_FORM_EDITOR, 'i'),
   BUTTON_ADD_NOTES: new RegExp(APP_STRINGS.BUTTON_ADD_NOTES, 'i'),
   BUTTON_ADD_TIMER: new RegExp(APP_STRINGS.BUTTON_ADD_TIMER, 'i'),
+  BUTTON_ADD_ANALYTICS: new RegExp(APP_STRINGS.BUTTON_ADD_ANALYTICS, 'i'),
+  BUTTON_ADD_FORMS: new RegExp(APP_STRINGS.BUTTON_ADD_FORMS, 'i'),
 } as const;
 
 export const COMPONENT_NAMES = {
@@ -28,11 +46,37 @@ export const COMPONENT_NAMES = {
   FORM_EDITOR: 'Form Editor',
   NOTES: 'Notes',
   TIMER: 'Timer',
+  ANALYTICS: 'Analytics',
+  FORMS: 'Forms',
 } as const;
 
 export const REDUCER_NAMES = {
   COUNTER: 'CounterReducer',
   NOTES: 'NotesReducer',
+  ANALYTICS: 'analytics',
+} as const;
+
+export const MICRO_FRONTEND_STRINGS = {
+  TOGGLE_LABEL: 'Architecture',
+  TOGGLE_ARIA_LABEL: 'Micro-frontend architecture demo',
+  DESCRIPTION_LOCAL: 'Local features',
+  DESCRIPTION_LOCAL_DETAIL: 'loaded from monolith (Counter, Notes, Timer…).',
+  DESCRIPTION_REMOTE: 'Remote features',
+  DESCRIPTION_REMOTE_DETAIL: 'loaded via Module Federation at runtime.',
+  LOAD_ANALYTICS: 'Load Analytics Feature',
+  LOADING: 'Loading…',
+  LOAD_ERROR_FALLBACK: 'Failed to load Analytics remote',
+  LOADED_SUCCESS: 'Analytics remote loaded.',
+  LOAD_FAILED_PREFIX: 'Feature',
+  LOAD_FAILED_MIDDLE: 'failed to load.',
+  LOAD_FAILED_UNKNOWN: 'Failed to load remote',
+  REMOTE_SUFFIX: '(remote)',
+  VIEWS_LABEL: 'Views:',
+  CLICKS_LABEL: 'Clicks:',
+  INCREMENT: '+1',
+  INCREMENT_VIEWS_ARIA: 'Increment views',
+  INCREMENT_CLICKS_ARIA: 'Increment clicks',
+  LOADED_CAPTION: 'Loaded from analytics remote via Module Federation',
 } as const;
 
 export const WINDOW_STRINGS = {
@@ -107,12 +151,18 @@ export const DESKTOP_STRINGS = {
   DESKTOP_ARIA_LABEL: 'Desktop application workspace',
 } as const;
 
+export const REMOTE_FEATURE_NAMES = {
+  ANALYTICS: 'analytics',
+  SCHEMA_UI: 'schemaUi',
+} as const;
+
 export const LAYOUT_CONFIG = {
   BREAKPOINTS: { xl: 1920, lg: 1200, md: 996, sm: 768 },
   COLS: { xl: 12, lg: 12, md: 8, sm: 2 },
   DRAG_HANDLE_CLASS: 'drag-handle',
   Z_INDEX_FOCUSED: 10,
   Z_INDEX_NORMAL: 1,
+  FORMS_WINDOW_HEIGHT: 8,
 } as const;
 
 export const KEYBOARD_SHORTCUTS = {

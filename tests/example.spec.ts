@@ -19,8 +19,8 @@ test.describe('Basic app functionality', () => {
     const title = await page.title();
     expect(title).toBe(TEST_SELECTORS.PAGE_TITLE);
 
-    const htmlTitle = page.locator(TEST_SELECTORS.HEADING_SELECTOR);
-    const htmlTitleText = await htmlTitle.innerText();
-    expect(htmlTitleText).toBe(APP_STRINGS.HEADING_TITLE);
+    await expect(page.getByTestId(TEST_SELECTORS.APP_HEADING)).toHaveText(
+      APP_STRINGS.HEADING_TITLE
+    );
   });
 });

@@ -1,5 +1,7 @@
 # Dependencies
 /node_modules
+/host/node_modules
+/src/features/remotes/analytics/node_modules
 /.pnp
 .pnp.js
 
@@ -8,6 +10,8 @@
 
 # Production
 /build
+/host/dist
+/src/features/remotes/analytics/dist
 
 # Misc
 .DS_Store
@@ -41,3 +45,4 @@ yarn-error.log*
 /blob-report/
 /playwright/.cache/
 .vercel
+.env*

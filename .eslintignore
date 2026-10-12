@@ -1,5 +1,7 @@
 build/
 node_modules/
+host/
+src/features/remotes/analytics/
 **/__tests__/e2e/
 *.spec.ts
 *.spec.tsx

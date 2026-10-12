@@ -8,6 +8,7 @@ import { removeWindow, updateLayouts, setFocus } from './DesktopSlice';
 import { LayoutBreakpoint, DesktopUIWindow } from './types';
 import WindowComponent from '~/shared/components/Window/Window';
 import ComponentLoader from '~/shared/components/ComponentLoader/ComponentLoader';
+import RemoteFeatureLoader from '~/app-shell/RemoteFeatureLoader';
 import { removeLazyLoadedReducer } from '~/core/utils/lazyLoadReducer';
 import type { StoreWithReducerManager } from '~/core/store';
 import styles from './Desktop.module.css';
@@ -148,7 +149,7 @@ const Desktop: React.FC = () => {
               removeWindow={handleRemoveWindow}
               lazyLoadReducerName={window.lazyLoadReducerName}
               isFocused={window.id === focusedWindowId}
-              onFocus={() => handleFocusWindow(window.id)}
+              onFocus={handleFocusWindow}
             >
               {window.lazyLoadComponent && (
                 <ComponentLoader
@@ -156,6 +157,13 @@ const Desktop: React.FC = () => {
                   windowId={window.id}
                   windowName={window.name}
                   lazyLoadReducerName={window.lazyLoadReducerName}
+                />
+              )}
+              {window.remoteFeatureName && (
+                <RemoteFeatureLoader
+                  remoteFeatureName={window.remoteFeatureName}
+                  windowId={window.id}
+                  windowName={window.name}
                 />
               )}
             </WindowComponent>

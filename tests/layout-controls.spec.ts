@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { NOTES_STRINGS } from '~/shared/constants';
 import { TEST_SELECTORS } from '~/shared/testSelectors';
 import { closeAllWindows } from '~/tests/helpers';
+import { INITIAL_STATE_CONFIG } from '~/features/Desktop/config';
 
 test.describe('Layout control buttons', () => {
   test.beforeEach(async ({ page, context }) => {
@@ -62,10 +63,6 @@ test.describe('Layout control buttons', () => {
     const allWindows = page.locator(`[role="${TEST_SELECTORS.WINDOW_ROLE}"]`);
     await expect(allWindows).toHaveCount(3);
 
-    // Get initial position of first window
-    const window1 = allWindows.first();
-    const initialBox1 = await window1.boundingBox();
-
     // Click Organize Grid
     await expect(organizeButton).toBeVisible();
     await organizeButton.click();
@@ -76,15 +73,31 @@ test.describe('Layout control buttons', () => {
     // Verify windows are still visible
     await expect(allWindows).toHaveCount(3);
 
-    // Verify layout changed (position or size should differ)
-    const newBox1 = await window1.boundingBox();
-    const layoutChanged =
-      initialBox1?.x !== newBox1?.x ||
-      initialBox1?.y !== newBox1?.y ||
-      initialBox1?.width !== newBox1?.width ||
-      initialBox1?.height !== newBox1?.height;
+    // Verify equal-sized grid layout (stable regardless of previous layout state).
+    const boxes = await allWindows.evaluateAll((els) =>
+      els.map((el) => {
+        const rect = el.getBoundingClientRect();
+        return {
+          x: rect.x,
+          y: rect.y,
+          width: rect.width,
+          height: rect.height,
+        };
+      })
+    );
+    const widths = boxes.map((box) => box.width);
+    const heights = boxes.map((box) => box.height);
+    const maxWidth = Math.max(...widths);
+    const minWidth = Math.min(...widths);
+    const maxHeight = Math.max(...heights);
+    const minHeight = Math.min(...heights);
 
-    expect(layoutChanged).toBeTruthy();
+    expect(maxWidth - minWidth).toBeLessThanOrEqual(2);
+    expect(maxHeight - minHeight).toBeLessThanOrEqual(2);
+
+    // Ensure grid occupies at least two columns (not a stacked overlap).
+    const uniqueX = new Set(boxes.map((box) => Math.round(box.x)));
+    expect(uniqueX.size).toBeGreaterThanOrEqual(2);
   });
 
   test('Reset Layout button resets windows to default positions', async ({
@@ -234,10 +247,12 @@ test.describe('Layout control buttons', () => {
     await page.reload();
     await page.getByTestId(TEST_SELECTORS.APP_HEADING).waitFor();
 
-    // After reload with empty stored state, app shows initial windows (Counter, Notes, FormEditor)
+    // After reload with empty stored state, app shows the built-in dashboard
     const windowsAfterReload = page.locator(
       `[role="${TEST_SELECTORS.WINDOW_ROLE}"]`
     );
-    await expect(windowsAfterReload).toHaveCount(3);
+    await expect(windowsAfterReload).toHaveCount(
+      INITIAL_STATE_CONFIG.initialWindows.length
+    );
   });
 });

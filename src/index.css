@@ -3,24 +3,24 @@
   --bg: #ffffff;
   --text: #333333;
   --border: #cccccc;
-  --window-focused-border: #0066cc;
-  --window-focused-ring: rgba(0, 102, 204, 0.3);
+  --window-focused-border: rgba(0, 102, 204, 0.4);
+  --window-focused-ring: rgba(0, 102, 204, 0.15);
 }
 
 [data-theme='dark'] {
   --bg: #1a1a1a;
   --text: #e0e0e0;
   --border: #444444;
-  --window-focused-border: #3b82f6;
-  --window-focused-ring: rgba(59, 130, 246, 0.3);
+  --window-focused-border: rgba(59, 130, 246, 0.4);
+  --window-focused-ring: rgba(59, 130, 246, 0.15);
 }
 
 [data-theme='gradient'] {
   --bg: linear-gradient(135deg, #1e3a8a 0%, #5b21b6 100%);
   --text: #ffffff;
   --border: rgba(255, 255, 255, 0.15);
-  --window-focused-border: #3b82f6;
-  --window-focused-ring: rgba(59, 130, 246, 0.4);
+  --window-focused-border: rgba(59, 130, 246, 0.35);
+  --window-focused-ring: rgba(59, 130, 246, 0.2);
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.2);
 }

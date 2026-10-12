@@ -3,7 +3,7 @@ import { TEST_SELECTORS } from '~/shared/testSelectors';
 
 /**
  * Closes all open windows. Use after clearing localStorage when the app
- * shows initial windows (Counter, Notes, FormEditor) from INITIAL_STATE_CONFIG.
+ * shows the built-in dashboard (or bootstrap JSON) from INITIAL_STATE_CONFIG.
  */
 export async function closeAllWindows(page: Page): Promise<void> {
   const closeAllBtn = page.getByRole(TEST_SELECTORS.ROLES.BUTTON, {

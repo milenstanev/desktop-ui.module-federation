@@ -30,6 +30,9 @@ export const TEST_SELECTORS = {
   // Timer component
   TIMER_CONTAINER: 'timer-container',
 
+  ANALYTICS_REMOTE_FEATURE: 'analytics-remote-feature',
+  SCHEMA_UI_HOST: 'schema-ui-host',
+
   // Counter component
   COUNTER: {
     CONTAINER: 'counter-container',
@@ -44,6 +47,10 @@ export const TEST_SELECTORS = {
   WINDOW_HEADER: 'window-header',
   WINDOW_CONTENT: 'window-content',
   WINDOW_CLOSE_BUTTON: 'window-close-button',
+
+  DESKTOP_CONFIG_DIALOG: 'desktop-config-dialog',
+  DESKTOP_CONFIG_TEXTAREA: 'desktop-config-textarea',
+  DESKTOP_CONFIG_STATUS: 'desktop-config-status',
 
   // Test constants
   PAGE_TITLE: 'Desktop UI – Modular React Starter',
@@ -77,11 +84,23 @@ export const TEST_SELECTORS = {
     ADD_COUNTER: /add counter/i,
     ADD_NOTES: /add notes/i,
     ADD_TIMER: /add timer/i,
+    ADD_ANALYTICS: /add analytics/i,
+    ADD_FORMS: /add forms/i,
+    EDIT_RECORD: /^edit$/i,
+    UPDATE_RECORD: /^update$/i,
+    CREATE_RECORD: /^create$/i,
+    CANCEL_EDIT: /cancel edit/i,
     ADD_FORM_EDITOR: /add form editor/i,
     ADD_SIMPLE_EXAMPLE: /add simple example/i,
+    ARCHITECTURE: /architecture/i,
+    LOAD_ANALYTICS: /load analytics feature/i,
     ORGANIZE_GRID: /organize/i,
     RESET_LAYOUT: /reset window layouts/i,
     CLOSE_ALL: /close all/i,
+    DASHBOARD_CONFIG: /dashboard layout json/i,
+    APPLY_DASHBOARD_JSON: /apply json/i,
+    COPY_DASHBOARD_JSON: /copy current json/i,
+    DEFAULT_DASHBOARD: /use built-in dashboard/i,
     CLOSE_WINDOW: /close window/i,
     START_TIMER: /start/i,
     PAUSE_TIMER: /pause/i,

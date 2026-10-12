@@ -1,0 +1,30 @@
+.analytics {
+  padding: 16px;
+  font-family: system-ui, sans-serif;
+  min-height: 120px;
+}
+
+.title {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+}
+
+.stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.label {
+  color: #666;
+}
+
+.increment {
+  margin-left: 8px;
+}
+
+.caption {
+  font-size: 12px;
+  color: #888;
+  margin-top: 12px;
+}

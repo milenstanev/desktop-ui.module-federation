@@ -7,6 +7,7 @@ import DesktopSlice, {
   resetLayouts,
   removeAllWindows,
   organizeGrid,
+  applyDesktopConfig,
 } from '~/features/Desktop/DesktopSlice';
 import {
   LOCAL_STORAGE_DESKTOP_KEY,
@@ -179,6 +180,29 @@ describe('desktopStorageMiddleware', () => {
     expect(layouts.lg[0].h).toBe(3);
     expect(layouts.lg[0].x).toBe(0); // First position
     expect(layouts.lg[1].x).toBe(3); // Second position
+  });
+
+  it('persists when applyDesktopConfig is dispatched', () => {
+    store.dispatch(
+      applyDesktopConfig({
+        windows: [
+          {
+            id: 'from-json',
+            name: COMPONENT_NAMES.TIMER,
+            lazyLoadComponent: 'Timer',
+            layout: undefined,
+          },
+        ],
+        layouts: {
+          xl: [{ i: 'from-json', x: 0, y: 0, w: 4, h: 4 }],
+          lg: [{ i: 'from-json', x: 0, y: 0, w: 4, h: 4 }],
+          md: [{ i: 'from-json', x: 0, y: 0, w: 4, h: 4 }],
+          sm: [{ i: 'from-json', x: 0, y: 0, w: 2, h: 4 }],
+        },
+      })
+    );
+    const savedWindows = localStorage.getItem(LOCAL_STORAGE_DESKTOP_KEY);
+    expect(savedWindows).toContain('from-json');
   });
 
   it('removes Desktop keys from localStorage when removeAllWindows is dispatched', () => {

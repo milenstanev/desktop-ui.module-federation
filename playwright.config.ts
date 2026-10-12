@@ -28,9 +28,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npx serve -s build -l 3000',
+    command: './scripts/start-e2e-servers.sh',
     port: 3000,
     timeout: 120 * 1000,
-    reuseExistingServer: true,
+    reuseExistingServer: false,
   },
 });

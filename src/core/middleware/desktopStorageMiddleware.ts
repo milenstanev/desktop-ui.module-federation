@@ -6,6 +6,7 @@ import {
   resetLayouts,
   removeAllWindows,
   organizeGrid,
+  applyDesktopConfig,
 } from '~/features/Desktop/DesktopSlice';
 import {
   LOCAL_STORAGE_DESKTOP_KEY,
@@ -33,6 +34,7 @@ const LAYOUTS_PROPERTY = 'layouts';
  * - updateLayouts: Updates window layouts (drag/resize)
  * - resetLayouts: Resets all layouts to defaults
  * - organizeGrid: Organizes windows in equal-sized grid
+ * - applyDesktopConfig: Replaces windows and layouts from pasted JSON
  * - removeAllWindows: Removes Desktop keys from localStorage (full reset)
  *
  * NOT registered (intentionally):
@@ -54,7 +56,8 @@ export const desktopStorageMiddleware: Middleware<object, RootState> =
       addWindow.match(action) ||
       updateLayouts.match(action) ||
       resetLayouts.match(action) ||
-      organizeGrid.match(action)
+      organizeGrid.match(action) ||
+      applyDesktopConfig.match(action)
     ) {
       const state = store.getState();
       const {

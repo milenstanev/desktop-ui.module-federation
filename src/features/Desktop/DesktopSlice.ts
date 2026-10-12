@@ -1,13 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Layouts, Layout } from 'react-grid-layout';
 import { DesktopUIWindow, LayoutBreakpoint } from './types';
+import { defaultWindowsPositions } from './config';
 import {
-  LOCAL_STORAGE_LAYOUT_KEY,
-  LOCAL_STORAGE_DESKTOP_KEY,
-  defaultWindowsPositions,
-  INITIAL_STATE_CONFIG,
-} from './config';
-import { safeParseJson } from '~/shared/utils/storage';
+  resolveInitialDesktopState,
+  type DesktopSnapshot,
+} from './desktopSnapshot';
 
 /**
  * Desktop Slice
@@ -43,59 +41,31 @@ interface State {
   focusedWindowId: string | null;
 }
 
-function isDesktopUIWindowArray(value: unknown): value is DesktopUIWindow[] {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (item) =>
-        item != null &&
-        typeof item === 'object' &&
-        typeof item.id === 'string' &&
-        typeof item.name === 'string'
-    )
-  );
-}
-
-function isLayouts(value: unknown): value is Layouts {
-  if (value == null || typeof value !== 'object') return false;
-  const obj = value as Record<string, unknown>;
-  return (
-    Array.isArray(obj.lg) && Array.isArray(obj.md) && Array.isArray(obj.sm)
-  );
-}
-
 const defaultLayouts: Layouts = { xl: [], lg: [], md: [], sm: [] };
 
-const storedWindows = safeParseJson<DesktopUIWindow[]>(
-  LOCAL_STORAGE_DESKTOP_KEY,
-  [],
-  isDesktopUIWindowArray
-);
+function layoutItem(
+  id: string,
+  x: number,
+  y: number,
+  defaults: Layout,
+  preferredSize: DesktopUIWindow['preferredSize'],
+  lockWidth = false
+): Layout {
+  return {
+    ...defaults,
+    i: id,
+    x,
+    y,
+    w: lockWidth ? defaults.w : (preferredSize?.w ?? defaults.w),
+    h: preferredSize?.h ?? defaults.h,
+  };
+}
 
-const hasStoredWindows = storedWindows.length > 0;
-const desktopWindows: DesktopUIWindow[] = hasStoredWindows
-  ? storedWindows
-  : INITIAL_STATE_CONFIG.initialWindows;
-
-const rawLayouts = safeParseJson<Layouts>(
-  LOCAL_STORAGE_LAYOUT_KEY,
-  hasStoredWindows ? defaultLayouts : INITIAL_STATE_CONFIG.initialLayouts,
-  isLayouts
-);
-// Migrate old layouts to include xl breakpoint
-const layouts: Layouts = {
-  xl: (rawLayouts as any).xl || [],
-  lg: rawLayouts.lg || [],
-  md: rawLayouts.md || [],
-  sm: rawLayouts.sm || [],
-};
-
-const isFirstVisit = !hasStoredWindows;
+const resolvedInitial = resolveInitialDesktopState();
 const initialState: State = {
-  desktopWindows,
-  layouts,
-  focusedWindowId:
-    isFirstVisit && desktopWindows.length > 0 ? desktopWindows[0].id : null,
+  desktopWindows: resolvedInitial.desktopWindows,
+  layouts: resolvedInitial.layouts,
+  focusedWindowId: resolvedInitial.focusedWindowId,
 };
 
 export const DesktopSlice = createSlice({
@@ -142,30 +112,44 @@ export const DesktopSlice = createSlice({
         const mdCol = (windowCount % 2) * 4;
         const mdRow = Math.floor(windowCount / 2) * 4;
 
-        const xl: Layout = action.payload.layout?.xl ?? {
-          ...defaultWindowsPositions.xl,
-          i: `${action.payload.id}`,
-          x: xlCol,
-          y: xlRow,
-        };
-        const lg: Layout = action.payload.layout?.lg ?? {
-          ...defaultWindowsPositions.lg,
-          i: `${action.payload.id}`,
-          x: lgCol,
-          y: lgRow,
-        };
-        const md: Layout = action.payload.layout?.md ?? {
-          ...defaultWindowsPositions.md,
-          i: `${action.payload.id}`,
-          x: mdCol,
-          y: mdRow,
-        };
-        const sm: Layout = action.payload.layout?.sm ?? {
-          ...defaultWindowsPositions.sm,
-          i: `${action.payload.id}`,
-          x: 0,
-          y: windowCount * 4,
-        };
+        const preferredSize = action.payload.preferredSize;
+        const xl: Layout =
+          action.payload.layout?.xl ??
+          layoutItem(
+            action.payload.id,
+            xlCol,
+            xlRow,
+            defaultWindowsPositions.xl,
+            preferredSize
+          );
+        const lg: Layout =
+          action.payload.layout?.lg ??
+          layoutItem(
+            action.payload.id,
+            lgCol,
+            lgRow,
+            defaultWindowsPositions.lg,
+            preferredSize
+          );
+        const md: Layout =
+          action.payload.layout?.md ??
+          layoutItem(
+            action.payload.id,
+            mdCol,
+            mdRow,
+            defaultWindowsPositions.md,
+            preferredSize
+          );
+        const sm: Layout =
+          action.payload.layout?.sm ??
+          layoutItem(
+            action.payload.id,
+            0,
+            windowCount * 4,
+            defaultWindowsPositions.sm,
+            preferredSize,
+            true
+          );
 
         state.layouts.xl.push(xl);
         state.layouts.lg.push(lg);
@@ -233,6 +217,16 @@ export const DesktopSlice = createSlice({
       state.desktopWindows = [];
       state.layouts = defaultLayouts;
       state.focusedWindowId = null;
+    },
+    applyDesktopConfig: (state, action: PayloadAction<DesktopSnapshot>) => {
+      state.desktopWindows = action.payload.windows;
+      state.layouts = {
+        xl: [...(action.payload.layouts.xl ?? [])],
+        lg: [...(action.payload.layouts.lg ?? [])],
+        md: [...(action.payload.layouts.md ?? [])],
+        sm: [...(action.payload.layouts.sm ?? [])],
+      };
+      state.focusedWindowId = action.payload.windows[0]?.id ?? null;
     },
     organizeGrid: (state) => {
       // Organize all windows in an equal-sized grid
@@ -307,6 +301,7 @@ export const {
   resetLayouts,
   removeAllWindows,
   organizeGrid,
+  applyDesktopConfig,
 } = DesktopSlice.actions;
 
 /**

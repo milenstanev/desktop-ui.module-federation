@@ -88,6 +88,53 @@ describe('resolveInitialDesktopState', () => {
     expect(resolved.focusedWindowId).toBe('bootstrap-timer');
   });
 
+  it('prefers desktopConfig query over persisted windows', () => {
+    localStorage.setItem(
+      LOCAL_STORAGE_DESKTOP_KEY,
+      JSON.stringify([
+        {
+          id: 'stored',
+          name: COMPONENT_NAMES.COUNTER,
+          lazyLoadComponent: 'Counter',
+        },
+      ])
+    );
+    const snapshot = parseDesktopSnapshot([
+      {
+        id: 'query-analytics-1',
+        name: COMPONENT_NAMES.ANALYTICS,
+        remoteFeatureName: 'analytics',
+        lazyLoadReducerName: 'analytics',
+      },
+      {
+        id: 'query-analytics-2',
+        name: COMPONENT_NAMES.ANALYTICS,
+        remoteFeatureName: 'analytics',
+        lazyLoadReducerName: 'analytics',
+      },
+      {
+        id: 'query-forms-1',
+        name: COMPONENT_NAMES.FORMS,
+        remoteFeatureName: 'schemaUi',
+      },
+      {
+        id: 'query-forms-2',
+        name: COMPONENT_NAMES.FORMS,
+        remoteFeatureName: 'schemaUi',
+      },
+    ]);
+    const search = `?${DESKTOP_CONFIG_QUERY_PARAM}=${encodeURIComponent(
+      JSON.stringify(snapshot)
+    )}`;
+    const resolved = resolveInitialDesktopState(localStorage, search);
+    expect(resolved.desktopWindows.map((window) => window.id)).toEqual([
+      'query-analytics-1',
+      'query-analytics-2',
+      'query-forms-1',
+      'query-forms-2',
+    ]);
+  });
+
   it('prefers persisted windows over bootstrap', () => {
     localStorage.setItem(
       LOCAL_STORAGE_DESKTOP_KEY,

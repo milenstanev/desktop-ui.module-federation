@@ -322,6 +322,15 @@ export function resolveInitialDesktopState(
   layouts: Layouts;
   focusedWindowId: string | null;
 } {
+  const fromQuery = readDesktopConfigFromSearch(search);
+  if (fromQuery) {
+    return {
+      desktopWindows: fromQuery.windows,
+      layouts: fromQuery.layouts,
+      focusedWindowId: fromQuery.windows[0]?.id ?? null,
+    };
+  }
+
   const storedWindows = safeParseJson<DesktopUIWindow[]>(
     LOCAL_STORAGE_DESKTOP_KEY,
     [],
@@ -343,15 +352,6 @@ export function resolveInitialDesktopState(
         sm: rawLayouts.sm ?? [],
       },
       focusedWindowId: null,
-    };
-  }
-
-  const fromQuery = readDesktopConfigFromSearch(search);
-  if (fromQuery) {
-    return {
-      desktopWindows: fromQuery.windows,
-      layouts: fromQuery.layouts,
-      focusedWindowId: fromQuery.windows[0]?.id ?? null,
     };
   }
 

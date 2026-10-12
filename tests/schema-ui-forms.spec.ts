@@ -212,8 +212,7 @@ test.describe('Schema UI forms remote', () => {
       })
       .first();
     await expect(editButton).toBeVisible();
-    await editButton.scrollIntoViewIfNeeded();
-    await editButton.click({ force: true });
+    await editButton.evaluate((node) => (node as HTMLButtonElement).click());
 
     await expect(
       forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
@@ -272,7 +271,7 @@ test.describe('Schema UI forms remote', () => {
         name: TEST_SELECTORS.BUTTONS.EDIT_RECORD,
       })
       .first()
-      .click({ force: true });
+      .evaluate((node) => (node as HTMLButtonElement).click());
     await expect(
       forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
         name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
@@ -318,8 +317,7 @@ test.describe('Schema UI forms remote', () => {
         name: TEST_SELECTORS.BUTTONS.EDIT_RECORD,
       })
       .first();
-    await editButton.scrollIntoViewIfNeeded();
-    await editButton.click({ force: true });
+    await editButton.evaluate((node) => (node as HTMLButtonElement).click());
     await expect(
       forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
         name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,

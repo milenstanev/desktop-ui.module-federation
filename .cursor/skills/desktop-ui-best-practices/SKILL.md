@@ -74,5 +74,6 @@ UI changes: exercise the flow in the browser (or Playwright) across related wind
 ## Related skills
 
 - New local window/feature: `desktop-ui-features`
+- Window snapshot / dashboard JSON / share URLs: `desktop-ui-data-model`
 - Tests: `desktop-ui-testing`
 - Remotes / Module Federation: `desktop-ui-module-federation`

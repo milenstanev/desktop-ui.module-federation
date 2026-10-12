@@ -29,8 +29,9 @@ const DesktopConfigurator: React.FC = () => {
     const fromQuery = readDesktopConfigFromSearch(window.location.search);
     if (fromQuery) {
       saveBootstrapSnapshot(fromQuery);
+      dispatch(applyDesktopConfig(fromQuery));
     }
-  }, []);
+  }, [dispatch]);
 
   const handleOpen = useCallback(() => {
     setDraft(serializeDesktopSnapshot({ windows, layouts }));

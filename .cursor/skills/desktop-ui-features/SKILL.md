@@ -88,6 +88,7 @@ If you add an action that changes `desktopWindows` or `layouts`:
 - Local: `lazyLoadComponent` + `componentLoader`.
 - Remote (Module Federation): `remoteFeatureName` + `loadRemoteFeature` / `RemoteFeatureLoader`. See skill `desktop-ui-module-federation`.
 - Do not mix both on the same window unless there is a clear reason.
+- Window **type may repeat**; identity is `id`. Snapshots, `?desktopConfig=`, bootstrap: skill `desktop-ui-data-model`.
 
 ## Architecture constraints
 

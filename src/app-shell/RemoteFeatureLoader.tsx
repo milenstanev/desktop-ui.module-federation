@@ -1,4 +1,5 @@
 import React, { Suspense, useEffect, useLayoutEffect, useState } from 'react';
+import { DASHBOARD_DATA_SYNC_EVENT } from '~/app-shell/iframeBridge/protocol';
 import { loadRemoteFeature } from '~/app-shell/loadRemoteFeature';
 import { getFeature } from '~/core/feature-registry';
 import Loader from '~/shared/components/Loader/Loader';
@@ -42,6 +43,20 @@ const RemoteFeatureLoader: React.FC<RemoteFeatureLoaderProps> = ({
     getFeature(remoteFeatureName)
   );
   const [error, setError] = useState<string | null>(null);
+  const [syncEpoch, setSyncEpoch] = useState(0);
+
+  useEffect(() => {
+    if (remoteFeatureName !== REMOTE_FEATURE_NAMES.SCHEMA_UI) {
+      return;
+    }
+    const onSync = (): void => {
+      setSyncEpoch((epoch) => epoch + 1);
+    };
+    window.addEventListener(DASHBOARD_DATA_SYNC_EVENT, onSync);
+    return () => {
+      window.removeEventListener(DASHBOARD_DATA_SYNC_EVENT, onSync);
+    };
+  }, [remoteFeatureName]);
 
   useEffect(() => {
     if (feature) {
@@ -92,7 +107,11 @@ const RemoteFeatureLoader: React.FC<RemoteFeatureLoaderProps> = ({
       className={isSchemaUi ? styles.schemaUiHost : undefined}
       data-testid={isSchemaUi ? TEST_SELECTORS.SCHEMA_UI_HOST : undefined}
     >
-      <Component windowId={windowId} windowName={windowName} />
+      <Component
+        key={isSchemaUi ? `${windowId}-${syncEpoch}` : windowId}
+        windowId={windowId}
+        windowName={windowName}
+      />
     </div>
   );
 

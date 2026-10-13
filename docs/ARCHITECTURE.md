@@ -330,6 +330,7 @@ No changes to core store or routing required.
 - **Advanced Instrumentation:** Performance monitoring per feature
 - **DevTools:** Visualize injected modules and state
 - **Micro-frontends:** Full feature independence with separate builds
+- **Iframe guests:** AngularJS and other non-federated apps use [IFRAME_SDK.md](./IFRAME_SDK.md) (`window.desktopUi` + `postMessage`)
 
 ### Known Limitations
 
@@ -345,6 +346,7 @@ No changes to core store or routing required.
 - [Architecture Decision Records](./decisions/0001-dynamic-reducer-injection.md) - Detailed design decisions
 - [Best Practices](./BEST_PRACTICES.md) - Code quality guidelines
 - [Feature Components](./FEATURE_COMPONENTS.md) - How to add features
+- [Iframe SDK](./IFRAME_SDK.md) - AngularJS / iframe `window.postMessage` events
 - [Middleware Persistence](./MIDDLEWARE_PERSISTENCE.md) - Persistence patterns
 - [Performance](./PERFORMANCE.md) - Performance optimization guide
 

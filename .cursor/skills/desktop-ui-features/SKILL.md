@@ -87,6 +87,7 @@ If you add an action that changes `desktopWindows` or `layouts`:
 
 - Local: `lazyLoadComponent` + `componentLoader`.
 - Remote (Module Federation): `remoteFeatureName` + `loadRemoteFeature` / `RemoteFeatureLoader`. See skill `desktop-ui-module-federation`.
+- Iframe (AngularJS / other): `features/JspmApp` + [IFRAME_SDK.md](../../../docs/IFRAME_SDK.md). Schema-as-design: skill `desktop-ui-schema-as-design`. Guest events use `window.desktopUi`, not shared objects.
 - Do not mix both on the same window unless there is a clear reason.
 - Window **type may repeat**; identity is `id`. Snapshots, `?desktopConfig=`, bootstrap: skill `desktop-ui-data-model`.
 

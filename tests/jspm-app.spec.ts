@@ -26,6 +26,9 @@ test.describe('JSPM AngularJS window', () => {
 
     const frame = page.getByTestId(TEST_SELECTORS.JSPM_APP_FRAME);
     await expect(frame).toBeVisible();
-    await expect(frame).toHaveAttribute('src', DEFAULT_JSPM_APP_URL);
+    const src = await frame.getAttribute('src');
+    expect(src).toContain(DEFAULT_JSPM_APP_URL);
+    expect(src).toContain('desktopWindowId=');
+    expect(src).toContain('desktopHostOrigin=');
   });
 });

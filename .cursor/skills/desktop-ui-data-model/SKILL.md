@@ -115,4 +115,4 @@ Grid instances are still two DOM windows.
 - Do not unique-by-`name` in `addWindow` or the parser.
 - Strings/test ids stay in `constants.ts` / `testSelectors.ts`.
 
-Related: `desktop-ui-features`, `desktop-ui-module-federation`.
+Related: `desktop-ui-features`, `desktop-ui-module-federation`, `desktop-ui-schema-as-design`.

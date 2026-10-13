@@ -1,4 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
+import { DASHBOARD_DATA_SYNC_EVENT } from '~/app-shell/iframeBridge/protocol';
 import RemoteFeatureLoader from '~/app-shell/RemoteFeatureLoader';
 import {
   MICRO_FRONTEND_STRINGS,
@@ -26,13 +27,22 @@ const mockLoadRemoteFeature = loadRemoteFeature as jest.MockedFunction<
 >;
 const mockGetFeature = getFeature as jest.MockedFunction<typeof getFeature>;
 
-const RemoteStub: React.FC<{ windowName: string }> = ({ windowName }) => (
-  <div>{windowName}</div>
-);
+let schemaUiMounts = 0;
+
+const RemoteStub: React.FC<{ windowName: string }> = ({ windowName }) => {
+  schemaUiMounts += 1;
+  return (
+    <div>
+      {windowName}
+      <span data-testid="schema-ui-mounts">{schemaUiMounts}</span>
+    </div>
+  );
+};
 
 describe('RemoteFeatureLoader', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    schemaUiMounts = 0;
     mockGetFeature.mockReturnValue(undefined);
   });
 
@@ -80,6 +90,33 @@ describe('RemoteFeatureLoader', () => {
     expect(
       screen.getByTestId(TEST_SELECTORS.SCHEMA_UI_HOST)
     ).toBeInTheDocument();
+  });
+
+  it('remounts schema-ui when the dashboard syncs from an iframe', async () => {
+    mockLoadRemoteFeature.mockResolvedValue({
+      name: REMOTE_FEATURE_NAMES.SCHEMA_UI,
+      displayName: 'Forms',
+      component: RemoteStub,
+    });
+
+    render(
+      <RemoteFeatureLoader
+        remoteFeatureName={REMOTE_FEATURE_NAMES.SCHEMA_UI}
+        windowId="w-forms"
+        windowName="Forms"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Forms')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('schema-ui-mounts')).toHaveTextContent('1');
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent(DASHBOARD_DATA_SYNC_EVENT));
+    });
+
+    expect(screen.getByTestId('schema-ui-mounts')).toHaveTextContent('2');
   });
 
   it('shows an alert when the remote fails to load', async () => {

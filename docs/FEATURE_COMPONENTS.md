@@ -38,6 +38,14 @@ src/features/<FeatureName>/
 - **E2E**: `tests/form-editor.spec.ts` (6 tests: load form, populate data, edit fields, submit, loading state, button states).
 - **data-testid**: All form fields have `data-testid="form-field-{fieldName}"` for testing.
 
+### JSPM App (`features/JspmApp/`)
+
+- **What**: Cross-origin AngularJS app in an iframe (`https://jspm-app.vercel.app`).
+- **Redux**: None in the guest. Host listens for iframe events and can `removeWindow`.
+- **Events**: Guest `window.desktopUi.emit('userUpdated', { entity, record })` → overlay + Forms remount + `dashboardSync`. Schema is the design: [IFRAME_SDK.md](./IFRAME_SDK.md), skill `desktop-ui-schema-as-design`.
+- **Unit tests**: iframe URL handshake query; origin-checked `close`.
+- **E2E**: `tests/jspm-app.spec.ts`.
+
 ## Adding a new feature
 
 1. **Create feature folder**: `src/features/<Name>/` with component and `*.test.tsx`.

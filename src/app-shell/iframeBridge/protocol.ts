@@ -6,6 +6,8 @@ export const IFRAME_QUERY = {
   HOST_ORIGIN: 'desktopHostOrigin',
 } as const;
 
+export const IFRAME_GUEST_HASH = '!/home';
+
 export const GUEST_EVENT = {
   READY: 'ready',
   PING: 'ping',
@@ -92,5 +94,6 @@ export function buildIframeGuestUrl(
   const url = new URL(baseUrl);
   url.searchParams.set(IFRAME_QUERY.WINDOW_ID, windowId);
   url.searchParams.set(IFRAME_QUERY.HOST_ORIGIN, hostOrigin);
+  url.hash = IFRAME_GUEST_HASH;
   return url.toString();
 }

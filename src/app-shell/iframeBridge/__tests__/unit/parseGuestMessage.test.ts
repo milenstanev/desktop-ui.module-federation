@@ -1,5 +1,6 @@
 import { parseGuestMessage } from '../../parseGuestMessage';
 import {
+  buildIframeGuestUrl,
   GUEST_EVENT,
   IFRAME_BRIDGE_CHANNEL,
   IFRAME_BRIDGE_VERSION,
@@ -51,6 +52,20 @@ describe('parseGuestMessage', () => {
       parseGuestMessage(envelope({ channel: 'other' }), WINDOW_ID)
     ).toBeNull();
     expect(parseGuestMessage(envelope({ v: 99 }), WINDOW_ID)).toBeNull();
+  });
+});
+
+describe('buildIframeGuestUrl', () => {
+  it('puts handshake query before the Angular home hash', () => {
+    expect(
+      buildIframeGuestUrl(
+        'https://jspm-app.vercel.app',
+        'w1',
+        'https://desktop-ui-mf.vercel.app'
+      )
+    ).toBe(
+      'https://jspm-app.vercel.app/?desktopWindowId=w1&desktopHostOrigin=https%3A%2F%2Fdesktop-ui-mf.vercel.app#!/home'
+    );
   });
 });
 

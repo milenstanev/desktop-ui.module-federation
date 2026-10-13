@@ -64,6 +64,17 @@ function writeOverlay(overlay: OverlayState): void {
   );
 }
 
+export function upsertSchemaUiRecord(
+  entity: string,
+  record: EntityRecord
+): EntityRecord | null {
+  const recordId = record._id;
+  if (typeof recordId !== 'string' || recordId.length === 0) {
+    return null;
+  }
+  return upsertOverlay(entity, recordId, record);
+}
+
 function upsertOverlay(
   entity: string,
   recordId: string,

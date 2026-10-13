@@ -69,7 +69,7 @@ npx tsc --noEmit
 npm run test:unit
 ```
 
-UI changes: exercise the flow in the browser (or Playwright) across related windows/routes.
+UI changes: exercise the flow in the **local** browser (or Playwright) across related windows/routes. Do not `npx vercel --prod` until local tests and that local flow are green. Rule: `.cursor/rules/verify-locally-before-deploy.mdc`.
 
 ## Related skills
 

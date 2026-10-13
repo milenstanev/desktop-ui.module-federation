@@ -38,6 +38,7 @@ src/core/…/*.test.ts
 
 ## E2E (Playwright)
 
+- Prove UI on localhost (or Playwright against local `webServer`) before any production deploy. Rule: `.cursor/rules/verify-locally-before-deploy.mdc`.
 - Config: `playwright.config.ts`. Memory suite is separate (`playwright.memory.config.ts`, tag `@memory`).
 - `webServer` command: `./scripts/start-e2e-servers.sh` (serves `build/` on :3000 and analytics `dist/` on :3002 with CORS).
 - Before click/fill: `await expect(locator).toBeVisible()`.

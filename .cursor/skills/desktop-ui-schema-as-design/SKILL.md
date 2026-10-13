@@ -26,7 +26,7 @@ Canonical helpers: `src/app-shell/schema/materializeRecord.ts`, overlay `src/app
 ## Flow
 
 1. Guest (JSPM home, default hash `#!/home`) fetches schema + collection.
-2. `materializeRecordFromSchema` (or the Angular equivalent) builds the record.
+2. `materializeRecordFromSchema` (desktop-ui) or `users-form.lib.js` (`materializeRecord` / `buildFormHtml`) projects the record and Bootstrap 3 markup. Tests live in `users-form.test.js` (red first). Prove it on localhost before any production deploy.
 3. Submit: PUT `/api/users/:id`, then `window.desktopUi.emit('userUpdated', { entity, record })`.
 4. Host: origin-check, `upsertSchemaUiRecord`, CustomEvent, remount every schema-ui window, `postMessage` `dashboardSync` to all iframes.
 

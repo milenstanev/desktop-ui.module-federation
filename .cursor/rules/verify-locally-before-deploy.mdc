@@ -1,0 +1,24 @@
+---
+description: Never deploy production until local tests and browser checks pass
+alwaysApply: true
+---
+
+# Verify locally, then deploy
+
+Production (`npx vercel --prod`, Git push-to-deploy, production aliases) is a **gate**, not a debugging loop.
+
+## Required before any production deploy
+
+1. **TDD**: failing test first, then implementation, then green.
+2. **Local unit tests** for the changed surface (`npm run test:unit` here; `node --test users-form.test.js` in jspm.app).
+3. **Local browser**: exercise the flow on localhost (jspm `http://127.0.0.1:4173/#!/home`, host `http://localhost:3000`). Screenshots are not enough — click, type, submit.
+4. Only if those pass: deploy. If they fail: fix locally and re-verify. Do not `vercel --prod` to “see if it works”.
+
+## Do not
+
+```
+❌ change → vercel --prod → look at desktop-ui-mf / jspm-app.vercel.app
+✅ change → tests → local browser → deploy only when green
+```
+
+`desktop-ui-eight.vercel.app` stays untouched. Production for this repo is `desktop-ui-mf` + `master` **after** local green.

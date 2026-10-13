@@ -124,14 +124,37 @@ function parseJsonBody(init?: RequestInit): EntityRecord | null {
 }
 
 /**
+ * UsersPage/EntityPage default apiBase is `/api`, so the browser calls
+ * the desktop-ui origin. Point those at the schema-ui remote.
+ */
+export function resolveSchemaUiFetchUrl(
+  url: string,
+  remoteBaseUrl: string,
+  pageOrigin: string = window.location.origin
+): string {
+  try {
+    const parsed = new URL(url, pageOrigin);
+    if (parsed.origin === pageOrigin && parsed.pathname.startsWith('/api/')) {
+      return `${remoteBaseUrl}${parsed.pathname}${parsed.search}`;
+    }
+    return parsed.href;
+  } catch {
+    return url;
+  }
+}
+
+/**
  * schema-ui EntityPage uses GET for schema/list and PUT for update.
  * Cached GETs make update look like a no-op and can poison /schema.
  */
 export function shouldBypassHttpCache(
   url: string,
-  remoteBaseUrl: string
+  remoteBaseUrl: string,
+  pageOrigin: string = window.location.origin
 ): boolean {
-  return url.startsWith(remoteBaseUrl);
+  return resolveSchemaUiFetchUrl(url, remoteBaseUrl, pageOrigin).startsWith(
+    remoteBaseUrl
+  );
 }
 
 export function parseSchemaUiApiUrl(
@@ -333,13 +356,17 @@ export function installSchemaUiNetworkFetch(): void {
     const remoteBaseUrl = getSchemaUiRemoteBaseUrl();
     originalFetch = window.fetch.bind(window);
     window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
-      const url = requestUrl(input);
-      if (!shouldBypassHttpCache(url, remoteBaseUrl)) {
+      const url = resolveSchemaUiFetchUrl(requestUrl(input), remoteBaseUrl);
+      if (!url.startsWith(remoteBaseUrl)) {
         return originalFetch!(input, init);
       }
+      const nextInput: RequestInfo | URL =
+        typeof input === 'string' || input instanceof URL
+          ? url
+          : new Request(url, input);
       return handleSchemaUiFetch(
         url,
-        input,
+        nextInput,
         init,
         remoteBaseUrl,
         originalFetch!

@@ -61,7 +61,7 @@ function getRemoteConfigMap(): Record<string, RemoteConfig> {
         includeAlternatePaths: false,
       }),
       kind: 'esm',
-      expose: './UsersPage',
+      expose: './EntityPage',
       displayName: 'Forms',
     },
   };
@@ -221,6 +221,7 @@ function toFeatureModule(
   }
 
   const component = (mod.UsersPage ||
+    mod.EntityPage ||
     mod.FormDynamic ||
     mod.default ||
     mod.App) as ComponentType<Record<string, unknown>> | undefined;
@@ -231,8 +232,19 @@ function toFeatureModule(
     );
   }
 
+  const schemaUiPageProps =
+    config.name === REMOTE_FEATURE_NAMES.SCHEMA_UI
+      ? {
+          entity: 'users',
+          apiBase: `${getSchemaUiRemoteBaseUrl()}/api`,
+          title: 'Users',
+          description:
+            'Schema-driven form and table from the users PublicProps contract.',
+        }
+      : undefined;
+
   const Wrapped: React.FC<RemoteWindowProps> = () =>
-    React.createElement(component);
+    React.createElement(component, schemaUiPageProps);
 
   return {
     name: config.name,

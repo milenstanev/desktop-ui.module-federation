@@ -5,6 +5,7 @@ import {
   installSchemaUiNetworkFetch,
   parseSchemaUiApiUrl,
   resetSchemaUiNetworkFetchForTests,
+  resolveSchemaUiFetchUrl,
   shouldBypassHttpCache,
   uninstallSchemaUiNetworkFetch,
 } from './schemaUiFetch';
@@ -28,6 +29,23 @@ describe('schemaUiFetch', () => {
     expect(
       shouldBypassHttpCache('https://example.com/api/users', remoteBase)
     ).toBe(false);
+  });
+
+  it('rewrites host /api/users to the schema-ui remote (UsersPage apiBase)', () => {
+    expect(
+      resolveSchemaUiFetchUrl(
+        '/api/users/schema',
+        remoteBase,
+        'https://desktop-ui-mf.vercel.app'
+      )
+    ).toBe(`${remoteBase}/api/users/schema`);
+    expect(
+      shouldBypassHttpCache(
+        '/api/users',
+        remoteBase,
+        'https://desktop-ui-mf.vercel.app'
+      )
+    ).toBe(true);
   });
 
   it('parses collection, record, and schema API URLs', () => {
@@ -67,6 +85,23 @@ describe('schemaUiFetch', () => {
       username: 'demo 4',
       _id: '6addb3d3-fcc9-43a2-881b-696a50d41534',
     });
+  });
+
+  it('sends host-relative /api/users to the schema-ui remote', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => [],
+    });
+    window.fetch = fetchMock as unknown as typeof fetch;
+    installSchemaUiNetworkFetch();
+
+    await window.fetch('/api/users/schema');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${remoteBase}/api/users/schema`,
+      expect.objectContaining({ cache: 'no-store' })
+    );
   });
 
   it('forces cache no-store on schema-ui requests and restores fetch', async () => {

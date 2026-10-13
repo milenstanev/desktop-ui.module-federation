@@ -186,4 +186,94 @@ describe('resolveInitialDesktopState', () => {
     expect(resolved.desktopWindows[0].id).toBe('stored');
     expect(resolved.focusedWindowId).toBeNull();
   });
+
+  it('built-in dashboard includes a Forms (schemaUi) window', () => {
+    const names = getBuiltInDesktopSnapshot().windows.map(
+      (window) => window.remoteFeatureName
+    );
+    expect(names).toContain('schemaUi');
+  });
+
+  it('keeps Forms and JSPM App from the production share URL', () => {
+    const snapshot = {
+      windows: [
+        {
+          id: 'be309ad0-0be7-46d5-a02a-359f8875d3c5',
+          name: 'JSPM App',
+          lazyLoadComponent: 'JspmApp',
+          preferredSize: { h: 8 },
+        },
+        {
+          id: 'forms-1',
+          name: 'Forms',
+          remoteFeatureName: 'schemaUi',
+          preferredSize: { h: 8 },
+        },
+      ],
+      layouts: {
+        xl: [
+          { i: 'forms-1', x: 8, y: 0, w: 4, h: 8 },
+          {
+            i: 'be309ad0-0be7-46d5-a02a-359f8875d3c5',
+            x: 4,
+            y: 0,
+            w: 4,
+            h: 8,
+          },
+        ],
+        lg: [
+          { i: 'forms-1', x: 8, y: 0, w: 4, h: 8 },
+          {
+            i: 'be309ad0-0be7-46d5-a02a-359f8875d3c5',
+            x: 4,
+            y: 0,
+            w: 4,
+            h: 8,
+          },
+        ],
+        md: [
+          { i: 'forms-1', x: 0, y: 8, w: 4, h: 8 },
+          {
+            i: 'be309ad0-0be7-46d5-a02a-359f8875d3c5',
+            x: 4,
+            y: 0,
+            w: 4,
+            h: 8,
+          },
+        ],
+        sm: [
+          { i: 'forms-1', x: 0, y: 16, w: 2, h: 8 },
+          {
+            i: 'be309ad0-0be7-46d5-a02a-359f8875d3c5',
+            x: 0,
+            y: 4,
+            w: 2,
+            h: 8,
+          },
+        ],
+      },
+    };
+    const search = `?${DESKTOP_CONFIG_QUERY_PARAM}=${encodeURIComponent(
+      JSON.stringify(snapshot)
+    )}`;
+    localStorage.setItem(
+      LOCAL_STORAGE_DESKTOP_KEY,
+      JSON.stringify([
+        {
+          id: 'stored',
+          name: COMPONENT_NAMES.COUNTER,
+          lazyLoadComponent: 'Counter',
+        },
+      ])
+    );
+    const resolved = resolveInitialDesktopState(localStorage, search);
+    expect(resolved.desktopWindows.map((window) => window.id)).toEqual([
+      'be309ad0-0be7-46d5-a02a-359f8875d3c5',
+      'forms-1',
+    ]);
+    expect(resolved.layouts.lg.map((item) => item.i)).toEqual([
+      'forms-1',
+      'be309ad0-0be7-46d5-a02a-359f8875d3c5',
+    ]);
+  });
 });

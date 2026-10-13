@@ -30,5 +30,6 @@ test.describe('JSPM AngularJS window', () => {
     expect(src).toContain(DEFAULT_JSPM_APP_URL);
     expect(src).toContain('desktopWindowId=');
     expect(src).toContain('desktopHostOrigin=');
+    expect(src).toContain('#!/home');
   });
 });

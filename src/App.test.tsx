@@ -23,4 +23,7 @@ test('renders desktop UI header and add window buttons', () => {
   expect(
     screen.getByRole('button', { name: APP_TEST.BUTTON_ADD_FORMS })
   ).toBeInTheDocument();
+  expect(
+    screen.getByRole('button', { name: APP_TEST.BUTTON_ADD_JSPM_APP })
+  ).toBeInTheDocument();
 });

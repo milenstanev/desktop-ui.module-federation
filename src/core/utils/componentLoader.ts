@@ -20,6 +20,7 @@ export const componentLoader = {
   FormEditor: () => import('~/features/FormEditor/FormEditor'),
   Notes: () => import('~/features/Notes/Notes'),
   Timer: () => import('~/features/Timer/Timer'),
+  JspmApp: () => import('~/features/JspmApp/JspmApp'),
 };
 
 /**

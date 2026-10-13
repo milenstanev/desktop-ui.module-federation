@@ -39,6 +39,7 @@ Local keys must exist on `componentLoader`. Remote names must be `analytics` or 
 | Notes | `lazyLoadComponent: 'Notes'` | `NotesReducer` |
 | Form Editor | `lazyLoadComponent: 'FormEditor'` | none |
 | Simple Example | `lazyLoadComponent: 'SimpleExample'` | none |
+| JSPM App | `lazyLoadComponent: 'JspmApp'` (iframe of AngularJS `jspm.app`) | none |
 
 `addWindow` only rejects duplicate **`id`**. Header Add buttons always `uuidv4()`.
 

@@ -8,6 +8,7 @@ import {
   Timer,
   BarChart3,
   Table2,
+  Boxes,
   RotateCcw,
   X,
   Grid3x3,
@@ -148,6 +149,20 @@ const Header: React.FC = () => {
     );
   }, [dispatch]);
 
+  const handleAddJspmApp = useCallback(() => {
+    const id = uuidv4();
+
+    dispatch(
+      addWindow({
+        id,
+        name: COMPONENT_NAMES.JSPM_APP,
+        lazyLoadComponent: 'JspmApp',
+        layout: undefined,
+        preferredSize: { h: LAYOUT_CONFIG.JSPM_APP_WINDOW_HEIGHT },
+      })
+    );
+  }, [dispatch]);
+
   const handleOrganizeGrid = useCallback(() => {
     dispatch(organizeGrid());
   }, [dispatch]);
@@ -266,6 +281,14 @@ const Header: React.FC = () => {
         >
           {theme === 'gradient' && <BarChart3 size={16} />}
           <span>{APP_STRINGS.BUTTON_ADD_ANALYTICS}</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleAddJspmApp}
+          aria-label={APP_STRINGS.BUTTON_ADD_JSPM_APP}
+        >
+          {theme === 'gradient' && <Boxes size={16} />}
+          <span>{APP_STRINGS.BUTTON_ADD_JSPM_APP}</span>
         </button>
         <MicroFrontendDemo onOpenRemoteWindow={handleOpenRemoteWindow} />
       </div>

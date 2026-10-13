@@ -32,6 +32,7 @@ export const TEST_SELECTORS = {
 
   ANALYTICS_REMOTE_FEATURE: 'analytics-remote-feature',
   SCHEMA_UI_HOST: 'schema-ui-host',
+  JSPM_APP_FRAME: 'jspm-app-frame',
 
   // Counter component
   COUNTER: {
@@ -86,6 +87,7 @@ export const TEST_SELECTORS = {
     ADD_TIMER: /add timer/i,
     ADD_ANALYTICS: /add analytics/i,
     ADD_FORMS: /add forms/i,
+    ADD_JSPM_APP: /add jspm app/i,
     EDIT_RECORD: /^edit$/i,
     UPDATE_RECORD: /^update$/i,
     CREATE_RECORD: /^create$/i,

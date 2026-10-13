@@ -7,6 +7,7 @@ export const APP_STRINGS = {
   BUTTON_ADD_TIMER: 'Add Timer',
   BUTTON_ADD_ANALYTICS: 'Add Analytics',
   BUTTON_ADD_FORMS: 'Add Forms',
+  BUTTON_ADD_JSPM_APP: 'Add JSPM App',
   ORGANIZE_GRID_BUTTON: 'Organize windows in grid',
   RESET_LAYOUT_BUTTON: 'Reset window layouts',
   CLOSE_ALL_BUTTON: 'Close all windows',
@@ -40,6 +41,7 @@ export const APP_TEST = {
   BUTTON_ADD_TIMER: new RegExp(APP_STRINGS.BUTTON_ADD_TIMER, 'i'),
   BUTTON_ADD_ANALYTICS: new RegExp(APP_STRINGS.BUTTON_ADD_ANALYTICS, 'i'),
   BUTTON_ADD_FORMS: new RegExp(APP_STRINGS.BUTTON_ADD_FORMS, 'i'),
+  BUTTON_ADD_JSPM_APP: new RegExp(APP_STRINGS.BUTTON_ADD_JSPM_APP, 'i'),
 } as const;
 
 export const COMPONENT_NAMES = {
@@ -50,6 +52,7 @@ export const COMPONENT_NAMES = {
   TIMER: 'Timer',
   ANALYTICS: 'Analytics',
   FORMS: 'Forms',
+  JSPM_APP: 'JSPM App',
 } as const;
 
 export const REDUCER_NAMES = {
@@ -158,6 +161,10 @@ export const REMOTE_FEATURE_NAMES = {
   SCHEMA_UI: 'schemaUi',
 } as const;
 
+export const JSPM_APP_STRINGS = {
+  IFRAME_TITLE: 'JSPM AngularJS application',
+} as const;
+
 export const LAYOUT_CONFIG = {
   BREAKPOINTS: { xl: 1920, lg: 1200, md: 996, sm: 768 },
   COLS: { xl: 12, lg: 12, md: 8, sm: 2 },
@@ -165,6 +172,7 @@ export const LAYOUT_CONFIG = {
   Z_INDEX_FOCUSED: 10,
   Z_INDEX_NORMAL: 1,
   FORMS_WINDOW_HEIGHT: 8,
+  JSPM_APP_WINDOW_HEIGHT: 8,
 } as const;
 
 export const KEYBOARD_SHORTCUTS = {

@@ -1,5 +1,4 @@
 {
-  "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "build",
   "framework": "create-react-app",

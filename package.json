@@ -105,5 +105,10 @@
     "*.{css,json}": [
       "prettier --write"
     ]
+  },
+  "overrides": {
+    "react-scripts": {
+      "typescript": "^5.9.3"
+    }
   }
 }

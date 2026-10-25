@@ -11,7 +11,6 @@ Free deployment options for the desktop-ui starter.
 5. Your app will be live at `https://your-project.vercel.app`.
 
 **Project configuration** (`vercel.json`):
-- `installCommand: "npm install --legacy-peer-deps"` – used if you have peer dependency conflicts.
 - `ignoreCommand` – **exit 0 skips the build**. This project skips non-`master` branches (`exit 0`) and builds `master` (`exit 1`).
 
 **Deploy on merge to master:**

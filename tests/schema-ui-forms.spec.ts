@@ -135,6 +135,24 @@ async function mockUsersApi(
   });
 }
 
+function getEditRecordDialog(page: Page) {
+  return page.getByRole(TEST_SELECTORS.ROLES.DIALOG, {
+    name: TEST_SELECTORS.DIALOGS.EDIT_RECORD,
+  });
+}
+
+function getSaveChangesButton(page: Page) {
+  return getEditRecordDialog(page).getByRole(TEST_SELECTORS.ROLES.BUTTON, {
+    name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
+  });
+}
+
+function getEditRecordUsernameField(page: Page) {
+  // The edit dialog reuses field ids from the create form, so the label's
+  // htmlFor does not resolve to the dialog input.
+  return getEditRecordDialog(page).locator('#username');
+}
+
 async function openFormsWindow(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByTestId(TEST_SELECTORS.APP_HEADING).waitFor();
@@ -214,19 +232,13 @@ test.describe('Schema UI forms remote', () => {
     await expect(editButton).toBeVisible();
     await editButton.evaluate((node) => (node as HTMLButtonElement).click());
 
-    await expect(
-      forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
-        name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
-      })
-    ).toBeVisible();
+    const updateButton = getSaveChangesButton(page);
+    await expect(updateButton).toBeVisible();
 
-    const username = forms.getByLabel(/username/i);
+    const username = getEditRecordUsernameField(page);
     await expect(username).toHaveValue('demo');
     await username.fill('updated-user');
 
-    const updateButton = forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
-      name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
-    });
     await expect(updateButton).toBeVisible();
     await updateButton.click();
 
@@ -272,17 +284,9 @@ test.describe('Schema UI forms remote', () => {
       })
       .first()
       .evaluate((node) => (node as HTMLButtonElement).click());
-    await expect(
-      forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
-        name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
-      })
-    ).toBeVisible();
-    await forms.getByLabel(/username/i).fill('demo 4 updated');
-    await forms
-      .getByRole(TEST_SELECTORS.ROLES.BUTTON, {
-        name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
-      })
-      .click();
+    await expect(getSaveChangesButton(page)).toBeVisible();
+    await getEditRecordUsernameField(page).fill('demo 4 updated');
+    await getSaveChangesButton(page).click();
 
     await expect(forms.getByText('demo 4 updated')).toBeVisible();
     await expect(
@@ -318,21 +322,9 @@ test.describe('Schema UI forms remote', () => {
       })
       .first();
     await editButton.evaluate((node) => (node as HTMLButtonElement).click());
-    await expect(
-      forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
-        name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
-      })
-    ).toBeVisible();
-    await forms
-      .getByRole(TEST_SELECTORS.ROLES.BUTTON, {
-        name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
-      })
-      .click();
-    await expect(
-      forms.getByRole(TEST_SELECTORS.ROLES.BUTTON, {
-        name: TEST_SELECTORS.BUTTONS.UPDATE_RECORD,
-      })
-    ).toBeVisible();
+    await expect(getSaveChangesButton(page)).toBeVisible();
+    await getSaveChangesButton(page).click();
+    await expect(getSaveChangesButton(page)).toBeVisible();
     await expect(forms.getByText('demo')).toBeVisible();
   });
 });

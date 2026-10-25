@@ -89,17 +89,21 @@ export const TEST_SELECTORS = {
     ADD_FORMS: /add forms/i,
     ADD_JSPM_APP: /add jspm app/i,
     EDIT_RECORD: /^edit$/i,
-    UPDATE_RECORD: /^update$/i,
+    // schema-ui EntityPage edits in a dialog; submit label is "Save changes".
+    UPDATE_RECORD: /^save changes$/i,
     CREATE_RECORD: /^create$/i,
     CANCEL_EDIT: /cancel edit/i,
+    CLOSE_DIALOG: /^close$/i,
     ADD_FORM_EDITOR: /add form editor/i,
     ADD_SIMPLE_EXAMPLE: /add simple example/i,
     ARCHITECTURE: /architecture/i,
     LOAD_ANALYTICS: /load analytics feature/i,
+    INCREMENT_VIEWS: /increment views/i,
     ORGANIZE_GRID: /organize/i,
     RESET_LAYOUT: /reset window layouts/i,
     CLOSE_ALL: /close all/i,
     DASHBOARD_CONFIG: /dashboard layout json/i,
+    CLOSE_CONFIGURATOR: /close configurator/i,
     APPLY_DASHBOARD_JSON: /apply json/i,
     COPY_DASHBOARD_JSON: /copy current json/i,
     COPY_DASHBOARD_URL: /copy url/i,
@@ -130,8 +134,14 @@ export const TEST_SELECTORS = {
   ROLES: {
     HEADING: 'heading',
     BUTTON: 'button',
+    DIALOG: 'dialog',
     TIMER: 'timer',
     ALERT: 'alert',
+  },
+
+  // schema-ui edit dialog is portaled to document.body, outside schema-ui-host
+  DIALOGS: {
+    EDIT_RECORD: /edit record/i,
   },
 
   // Theme values

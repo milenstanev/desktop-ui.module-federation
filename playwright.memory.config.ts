@@ -40,7 +40,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: './scripts/start-e2e-servers.sh',
+    command:
+      '"C:/Program Files/Git/bin/bash.exe" ./scripts/start-e2e-servers.sh',
     port: 3000,
     timeout: 120 * 1000,
     reuseExistingServer: false,

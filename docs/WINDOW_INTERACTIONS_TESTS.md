@@ -1,3 +1,24 @@
+# E2E Tests
+
+Playwright config: `playwright.config.ts`. `npm run test:e2e` runs `./scripts/start-e2e-servers.sh` (serves production `build/` on `:3000` and analytics `dist/` on `:3002` with CORS). Specs matching `@memory` are excluded here; use `npm run test:memory`.
+
+## Suite index
+
+| Spec | Covers |
+| ---- | ------ |
+| `tests/window-interactions.spec.ts` | Layout persistence, remove/focus, drag handle (detail below) |
+| `tests/layout-controls.spec.ts` | Grid / reset / close-all controls |
+| `tests/focus.spec.ts` | Focus behaviour |
+| `tests/desktop-config.spec.ts` | JSON configurator / `?desktopConfig=` |
+| `tests/micro-frontends.spec.ts` | Analytics remote window |
+| `tests/schema-ui-forms.spec.ts` | Forms ESM remote + overlay |
+| `tests/jspm-app.spec.ts` | Iframe guest |
+| `tests/live-ui-test.spec.ts` | Broader UI smoke |
+| `tests/memory-endurance.spec.ts` | Long-running memory (`@memory`) |
+| `src/**/__tests__/e2e/**/*.spec.ts` | Feature-local E2E |
+
+---
+
 # Window Interactions E2E Tests
 
 **File**: `tests/window-interactions.spec.ts`
@@ -96,18 +117,13 @@ Smart, focused E2E tests that verify **YOUR custom implementation** - Redux inte
 ## Running the Tests
 
 ```bash
-# Build the app first
-npm run build
-
-# Run all E2E tests
-npx playwright test
-
-# Run only window interaction tests
-npx playwright test tests/window-interactions.spec.ts
-
-# Run with UI mode (debugging)
-npx playwright test --ui
+npm run test:e2e                                          # full suite (non-@memory)
+npx playwright test tests/window-interactions.spec.ts     # this file only
+npm run test:e2e:ui                                       # Playwright UI mode
+npm run test:memory                                       # endurance suite
 ```
+
+Ensure `npm run mf:install` has been run once so the analytics remote can build.
 
 ## Test Strategy
 
@@ -139,7 +155,7 @@ These tests follow a **"test your code, not libraries"** approach:
 
 ## Initial State and E2E Tests
 
-When the app loads with empty localStorage, `INITIAL_STATE_CONFIG` may add initial windows (Counter, Notes, FormEditor). Tests that assume no windows should call `closeAllWindows(page)` from `~/tests/helpers` in their `beforeEach` or at the start of the test. This clears all windows so tests run in a predictable state.
+When the app loads with empty localStorage, `INITIAL_STATE_CONFIG` opens Analytics, Counter, Timer, Forms, Notes, and Form Editor (including remotes). Tests that assume no windows should call `closeAllWindows(page)` from `~/tests/helpers` in their `beforeEach` or at the start of the test.
 
 ## Maintenance Notes
 

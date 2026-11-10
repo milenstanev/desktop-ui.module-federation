@@ -1,53 +1,64 @@
-# Implemented Features (feature/implemented-features)
+# Implemented Features
 
-This branch implements three features from the [Future Features Roadmap](./FUTURE_FEATURES.md), with tests.
-
----
-
-## 1. Window focus & z-index
-
-**What**: A single window can be focused. The focused window is brought to the front (higher z-index) and has a visible focus ring.
-
-**Changes**:
-- **DesktopSlice**: `focusedWindowId: string | null` in state; `setFocus(id | null)` action; new windows get focus on add; focus is cleared when a window is removed.
-- **Desktop**: Sorts windows so the focused one is last (rendered on top); passes `isFocused` and `onFocus` to each `Window`; sets `zIndex` on the wrapper div.
-- **Window**: `isFocused` and `onFocus` props; header is clickable/focusable to focus the window; `.focused` class for border and box-shadow.
-
-**Tests**: `DesktopSlice.test.ts` (focus on add, clear on remove, setFocus); `Window.test.tsx` (focused class, onFocus when header clicked).
+Current feature set in **desktop-ui.module-federation** (beyond the modular core inherited from [desktop-ui](https://github.com/milenstanev/desktop-ui)).
 
 ---
 
-## 2. Keyboard shortcuts
+## Shell & desktop
 
-**What**: **Escape** and **Cmd+W** (Mac) / **Ctrl+W** (Windows/Linux) close the currently focused window.
-
-**Changes**:
-- **Desktop**: `useEffect` that subscribes to `keydown` on `window`; if `focusedWindowId` is set and key is `Escape` or `w` with meta/ctrl, dispatches `removeWindow` and cleans up the lazy reducer when needed.
-
-**Tests**: `Desktop.keyboard.test.tsx` (Escape and Cmd+W close the focused window).
-
----
-
-## 3. Dark / light theme toggle
-
-**What**: Users can switch between light and dark theme. The choice is persisted in `localStorage` and applied via `data-theme` on the document root.
-
-**Changes**:
-- **config**: `LOCAL_STORAGE_THEME_KEY = 'desktopUI.theme'`.
-- **ThemeContext**: `ThemeProvider`, `useTheme()` with `theme`, `setTheme`, `toggleTheme`; initial theme from localStorage; syncs `data-theme` and localStorage on change.
-- **index.css**: CSS variables for `--bg`, `--text`, `--border`; `[data-theme="dark"]` overrides.
-- **Window.module.css**: Uses `var(--border)` for window border.
-- **App**: Wraps the app in `ThemeProvider`.
-- **Header**: “Dark mode” / “Light mode” button that calls `toggleTheme`.
-
-**Tests**: `ThemeContext.test.tsx` (default light, setTheme, toggleTheme, data-theme attribute, error when used outside provider).
+| Capability | Notes |
+| ---------- | ----- |
+| Window grid | `react-grid-layout`, drag by title handle, resize, per-breakpoint layouts |
+| Focus / z-index | Focused window on top; Escape and Cmd/Ctrl+W close focused window |
+| Themes | Light / Dark / Gradient via `ThemeContext`, persisted as `desktopUI.theme` |
+| Persistence | Middleware writes windows/layouts; Close All clears Desktop keys |
+| Dashboard configurator | Export / paste / share JSON; `?desktopConfig=` URL bootstrap |
+| Architecture panel | Loads analytics remote on demand for demos |
+| PWA | Service worker in production; remotes forced `NetworkOnly` |
 
 ---
 
-## How to run tests
+## Local features (`lazyLoadComponent`)
+
+| Window | Path | State |
+| ------ | ---- | ----- |
+| Simple Example | `src/features/SimpleExample` | none |
+| Counter | `src/features/Counter` | `CounterReducer` |
+| Notes | `src/features/Notes` | `NotesReducer` |
+| Timer | `src/features/Timer` | local only |
+| Form Editor | `src/features/FormEditor` | mock API + validation ([MOCK_API.md](./MOCK_API.md)) |
+| JSPM App | `src/features/JspmApp` | iframe guest → [IFRAME_SDK.md](./IFRAME_SDK.md) |
+
+---
+
+## Remote features (`remoteFeatureName`)
+
+| Window | Container | Kind | Source |
+| ------ | --------- | ---- | ------ |
+| Analytics | `analytics` | webpack `remoteEntry.js` | `src/features/remotes/analytics` (:3002 / `{origin}/remote`) |
+| Forms | `schemaUi` | ESM `remoteEntry.js` | [schema-ui-mf-remote](https://schema-ui-mf-remote.vercel.app) |
+
+Default first-visit layout (`INITIAL_STATE_CONFIG`) opens Analytics, Counter, Timer, Forms, Notes, and Form Editor. See [MICRO_FRONTENDS.md](./MICRO_FRONTENDS.md).
+
+---
+
+## Cross-cutting integrations
+
+| Feature | What it does |
+| ------- | ------------ |
+| Feature contract / registry | Local and remote features share `FeatureModule` |
+| Schema-as-design sync | Iframe or Forms edits merge into `desktopUI.schemaUi.overlay`; Surfaces remount on `desktop-ui:dashboard-sync` |
+| desktop-ui as remote | Exposes `desktopUI` (`./App`, `./Desktop`, `./Counter`, `./Notes`); [`host/`](../host/README.md) consumes it |
+| Google Analytics 4 | Optional `REACT_APP_GA_MEASUREMENT_ID` for pageviews / vitals in production |
+
+---
+
+## How to verify
 
 ```bash
-npm test -- --watchAll=false
+npm run test:unit
+npm run test:e2e          # builds/serves dashboard + analytics remote
+npm run test:memory       # endurance (@memory)
 ```
 
-All new and updated tests should pass.
+Docs index: [README](../README.md#-documentation).

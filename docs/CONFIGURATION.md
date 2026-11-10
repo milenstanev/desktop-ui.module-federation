@@ -68,6 +68,45 @@ Local overrides (gitignored). Create this file to customize settings without mod
 - **Description**: Generate bundle size analysis report
 - **Usage**: `ANALYZE=true npm run build`
 
+### Google Analytics 4
+
+**`REACT_APP_GA_MEASUREMENT_ID`**
+- **Type**: string (e.g. `G-XXXXXXXXXX`)
+- **Default**: unset
+- **Description**: When set in production, pageviews and Web Vitals are sent to GA4
+
+### Module Federation remotes
+
+Base URLs **without** `/remoteEntry.js`. Resolution and candidate lists: [MICRO_FRONTENDS.md](./MICRO_FRONTENDS.md#remote-url-resolution).
+
+**`REACT_APP_ANALYTICS_REMOTE_URL`**
+- **Default (localhost)**: `http://localhost:3002`
+- **Default (production, unset)**: `{window.location.origin}/remote` (Vercel microfrontends routing)
+- **Description**: Analytics webpack remote base URL
+
+**`REACT_APP_SCHEMA_UI_REMOTE_URL`**
+- **Default**: `https://schema-ui-mf-remote.vercel.app`
+- **Description**: schema-ui ESM remote (Forms window)
+
+### Host app (`host/`)
+
+**`REMOTE_URL`** (in `host/.env*`, not `REACT_APP_*`)
+- **Default**: `http://localhost:3000`
+- **Description**: Origin of the `desktopUI` container the host loads
+
+## localStorage & URL keys
+
+Defined in `src/features/Desktop/config.ts`:
+
+| Key / param | Purpose |
+| ----------- | ------- |
+| `desktopUI.desktop` | Persisted windows |
+| `desktopUI.layouts` | Persisted grid layouts |
+| `desktopUI.theme` | Theme preference |
+| `desktopUI.bootstrap` | Snapshot saved from the JSON configurator |
+| `desktopUI.schemaUi.overlay` | Schema-as-design record overlay (iframe + Forms) |
+| `?desktopConfig=` | Shareable dashboard JSON (wins over localStorage on load) |
+
 ## Usage Examples
 
 ### Development with PWA Enabled
@@ -222,8 +261,10 @@ For additional environments (staging, QA, etc.):
 
 ## Related Documentation
 
+- [Micro-Frontends](./MICRO_FRONTENDS.md) - remote URL candidates and shared scope
 - [PWA Guide](./PWA_GUIDE.md) - PWA configuration and usage
 - [Performance Guide](./PERFORMANCE.md) - Web Vitals and optimization
+- [Deployment](./DEPLOYMENT.md) - Vercel env for each container
 - [Create React App Docs](https://create-react-app.dev/docs/adding-custom-environment-variables/) - Environment variables reference
 
 ## Summary
@@ -232,6 +273,10 @@ For additional environments (staging, QA, etc.):
 |----------|-------------|------------|-------------|
 | `REACT_APP_ENABLE_PWA` | `false` | `true` | Enable PWA features |
 | `REACT_APP_ENABLE_VITALS_LOGGING` | `true` | `false` | Log Web Vitals to console |
+| `REACT_APP_GA_MEASUREMENT_ID` | unset | optional | GA4 measurement ID |
+| `REACT_APP_ANALYTICS_REMOTE_URL` | `http://localhost:3002` | `{origin}/remote` if unset | Analytics remote base |
+| `REACT_APP_SCHEMA_UI_REMOTE_URL` | schema-ui Vercel URL | same | Forms ESM remote base |
 | `ANALYZE` | `false` | `false` | Generate bundle analysis |
+| `REMOTE_URL` (host only) | `http://localhost:3000` | dashboard origin | desktopUI remote for `host/` |
 
-All configuration is optional with sensible defaults for each environment.
+All configuration is optional with sensible defaults for each environment. See also [Deployment](./DEPLOYMENT.md).

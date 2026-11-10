@@ -1,17 +1,23 @@
 # Architecture
 
-This document describes the architectural patterns and design decisions behind the desktop-ui modular SPA starter.
+This document describes the architectural patterns behind **desktop-ui.module-federation**: a desktop-style React dashboard that composes local feature modules, runtime Module Federation remotes, and cross-origin iframe guests.
+
+It grew out of [desktop-ui](https://github.com/milenstanev/desktop-ui) (modular SPA: feature folders, dynamic reducer injection, lazy loading). This repo keeps that core and adds runtime federation, an iframe SDK, and dashboard sharing.
+
+For Module Federation specifics see [MICRO_FRONTENDS.md](./MICRO_FRONTENDS.md) and [ADR 0005](./decisions/0005-runtime-module-federation.md).
 
 ---
 
 ## Overview
 
-This project explores a feature-based modular architecture for React applications, focusing on preventing monolithic SPA growth through:
+The app prevents a monolithic SPA from becoming unmaintainable through:
 
+- Feature-based modules with clear ownership
 - Dynamic reducer injection
-- Lazy loading
-- Feature isolation
-- Performance-aware rendering
+- Lazy loading for local features
+- Runtime Module Federation for independently deployed remotes
+- Per-window error boundaries
+- Middleware-based persistence (and optional `?desktopConfig=` sharing)
 
 ---
 
@@ -19,29 +25,25 @@ This project explores a feature-based modular architecture for React application
 
 ```
 src/
-├── app/        → Application bootstrap & routing
-│   ├── App.tsx
-│   ├── Header.tsx
-│   └── FooterTaskbar.tsx
-├── core/       → Infrastructure, store configuration, runtime logic
+├── index.tsx / bootstrap.tsx   → async MF entry, then real bootstrap
+├── app/                        → App, Header, FooterTaskbar
+├── app-shell/                  → remote loading, ESM import, schema-ui fetch overlay, iframe bridge
+├── core/                       → store, reducer manager, feature registry/contract, middleware, theme, GA
 │   ├── store.ts
-│   ├── hooks/           # useLazyLoadReducer, useKeyboardShortcuts, app hooks
-│   ├── middleware/      # desktopStorageMiddleware
-│   ├── contexts/        # ThemeContext
-│   └── utils/           # reducerManager, lazyLoadReducer, componentLoader
-├── shared/     → Reusable components & utilities
-│   ├── components/      # Window, ErrorBoundary, Icons, Loader, ComponentLoader
-│   ├── forms/           # Form field components (TextField, NumberField, etc.) – used by FormEditor and any feature with forms
-│   ├── utils/           # storage, mockApi
-│   ├── constants.ts
-│   └── testSelectors.ts
-└── features/   → Independent feature modules
-    ├── Desktop/         # Grid, windows, layouts
-    ├── Counter/
-    ├── FormEditor/
-    ├── Notes/
-    ├── Timer/
-    └── SimpleExample/
+│   ├── feature-types.ts / feature-registry.ts
+│   ├── hooks/                  # useLazyLoadReducer, useKeyboardShortcuts, …
+│   ├── middleware/             # desktopStorageMiddleware
+│   ├── contexts/               # ThemeContext
+│   └── utils/                  # reducerManager, lazyLoadReducer, componentLoader
+├── shared/                     → Window, ErrorBoundary, Loader, ComponentLoader, forms, constants, testSelectors
+└── features/                   → Desktop, Counter, Notes, Timer, FormEditor, JspmApp, MicroFrontendDemo, …
+    └── remotes/analytics/      → standalone webpack MF remote (own package.json)
+
+host/                           → standalone MF host that consumes desktopUI/App
+tests/                          → Playwright suites
+scripts/                        → e2e servers, Vercel deploy + artifact checks
+config-overrides.js             → ModuleFederationPlugin, Workbox, analyzer
+microfrontends.json             → Vercel routing (/remote → analytics)
 ```
 
 ---
@@ -50,315 +52,167 @@ src/
 
 ### 1. Feature-Based Module Structure
 
-Each feature is self-contained with clear boundaries:
+Each local feature is self-contained:
 
 ```
 src/features/FeatureName/
 ├── __tests__/
-│   ├── unit/           # Jest unit tests
-│   └── e2e/            # Playwright E2E tests
-├── FeatureName.tsx     # Component
-├── FeatureNameSlice.ts # Redux slice (optional)
-└── README.md           # Feature documentation
+│   ├── unit/
+│   └── e2e/            # optional; many E2E specs live under tests/
+├── FeatureName.tsx
+├── FeatureNameSlice.ts # optional
+└── README.md           # optional
 ```
 
-**Benefits:**
-- Clear ownership and responsibility
-- Easy to locate and modify feature code
-- Simple to add/remove features
-- Tests co-located with implementation
-
-**Trade-offs:**
-- Requires discipline to maintain boundaries
-- Initial setup overhead per feature
-
----
+Remote features live outside the main CRA bundle (in-tree under `src/features/remotes/*`, or an external deploy such as schema-ui) and still resolve to the same `FeatureModule` contract.
 
 ### 2. Dynamic Reducer Injection
 
-Instead of a static Redux store, reducers are injected at runtime when features are loaded.
+Reducers are injected at runtime when features load ([ADR 0001](./decisions/0001-dynamic-reducer-injection.md)).
 
-**Implementation:**
-- Custom `reducerManager` handles adding/removing reducers
-- `useLazyLoadReducer` hook injects reducer when component mounts
-- Reducer is removed when last instance of feature unmounts
+- Local: `useLazyLoadReducer` on mount; removed when the last window that uses the slice closes
+- Remote: `store.reducerManager.add()` inside `loadRemoteFeature()` when the remote exports a reducer
 
-**Benefits:**
-- Smaller initial bundle size
-- No unused state in memory
-- Independent feature evolution
-- Cleaner state tree
+### 3. Local lazy loading vs remote federation
 
-**Trade-offs:**
-- More complex store setup
-- Optional typing for dynamic slices: `state[featureName]?.value`
-- Requires coordination of reducer keys
+| Path | Window field | Loader | Deployed with |
+| ---- | ------------ | ------ | ------------- |
+| Local | `lazyLoadComponent` | `ComponentLoader` → `componentLoader` | Main app |
+| Remote | `remoteFeatureName` | `RemoteFeatureLoader` → `loadRemoteFeature` | Independently |
 
-See [ADR 0001: Dynamic Reducer Injection](./decisions/0001-dynamic-reducer-injection.md)
+**Local load flow**
 
----
+1. Header dispatches `addWindow({ lazyLoadComponent, … })`
+2. Desktop renders `<ComponentLoader />`
+3. `getLazyComponent()` dynamic-imports the feature (cached per name)
+4. Optional reducer injects via `useLazyLoadReducer`
 
-### 3. Lazy Loading & Code Splitting
+**Remote load flow**
 
-Features are loaded on demand using dynamic imports and a cached lazy component registry:
+1. Header (or restored layout) opens a window with `remoteFeatureName`
+2. `RemoteFeatureLoader` calls `loadRemoteFeature(name)`
+3. Container is fetched (`webpack-script` or `esm`), share scope is seeded with the host's React, then `container.get(expose)` runs
+4. Result is normalised to `FeatureModule`, registered, reducer injected if present
 
-```
-// src/core/utils/componentLoader.ts
-export const componentLoader = {
-  Counter: () => import('~/features/Counter/Counter'),
-  FormEditor: () => import('~/features/FormEditor/FormEditor'),
-  // ...
-};
-
-// getLazyComponent() returns cached lazy components to avoid remounts on re-renders
-export function getLazyComponent(name: ComponentNames): LazyExoticComponent;
-```
-
-The `ComponentLoader` component (`src/shared/components/ComponentLoader/`) wraps lazy components in `Suspense` with a loader fallback. Desktop uses it to render each window's content.
-
-**Loading Flow:**
-1. User clicks "Add Feature" button
-2. `addWindow` action dispatched with `lazyLoadComponent` key
-3. Desktop renders `<ComponentLoader componentName={...} ... />`
-4. Component dynamically imported via `getLazyComponent()` (cached per name)
-5. Reducer injected (if specified)
-6. Component rendered in window
-
-**Benefits:**
-- Reduced initial bundle size
-- Faster initial page load
-- Better perceived performance
-- Scales well with many features
-
-**Trade-offs:**
-- Slight delay on first feature load
-- More complex component registration
-
----
+Details: [MICRO_FRONTENDS.md](./MICRO_FRONTENDS.md).
 
 ### 4. Middleware-Based Persistence
 
-State persistence is handled by Redux middleware, keeping reducers pure.
+Desktop windows and layouts persist through `desktopStorageMiddleware` ([ADR 0002](./decisions/0002-local-storage-persistence.md)). Reducers stay pure.
 
-**Implementation:**
-```
-// desktopStorageMiddleware.ts
-if (
-  addWindow.match(action) ||
-  removeWindow.match(action) ||
-  updateLayouts.match(action)
-) {
-  // Save to localStorage after state update
-  localStorage.setItem('desktopState', JSON.stringify(state.desktop));
-}
-```
+Initial dashboard resolution order (`desktopSnapshot.ts`):
 
-**Benefits:**
-- Reducers stay pure and testable
-- Single source of truth for persistence logic
-- Easy to swap storage (localStorage → IndexedDB)
-- No backend required
+1. `?desktopConfig=` query (share / paste URL)
+2. Saved localStorage (`desktopUI.desktop` / `desktopUI.layouts`)
+3. Saved bootstrap snapshot (`desktopUI.bootstrap`)
+4. Built-in `INITIAL_STATE_CONFIG`
 
-**Trade-offs:**
-- Limited to ~5MB in localStorage
-- No multi-device sync
-- Must handle corrupted data gracefully
-
-See [ADR 0002: Local Storage Persistence](./decisions/0002-local-storage-persistence.md)
-
----
+Schema-as-design edits from the iframe or Forms remote use a separate overlay key (`desktopUI.schemaUi.overlay`). See [MIDDLEWARE_PERSISTENCE.md](./MIDDLEWARE_PERSISTENCE.md) and [IFRAME_SDK.md](./IFRAME_SDK.md).
 
 ### 5. Isolated Error Boundaries
 
-Each window has its own error boundary to prevent cascading failures.
+Each window wraps content in its own `ErrorBoundary` ([ADR 0003](./decisions/0003-error-boundary-per-window.md)). Remote load failures show an inline alert with tried URLs instead of crashing the shell.
 
-**Implementation:**
+### 6. Iframe guests (non-federated)
+
+Apps that cannot share React (AngularJS JSPM, etc.) embed via `<iframe>` and a versioned `postMessage` protocol ([ADR 0004](./decisions/0004-iframe-postmessage-sdk.md), [IFRAME_SDK.md](./IFRAME_SDK.md)).
+
+---
+
+## Runtime composition
+
 ```
-<ErrorBoundary key={window.id}>
-  <LazyComponent />
-</ErrorBoundary>
+                           desktop-ui  (MF container "desktopUI")
+   ┌──────────────────────────────────────────────────────────────────────────┐
+   │  Header ─ addWindow({ lazyLoadComponent | remoteFeatureName })           │
+   │  Redux store (Desktop + injected reducers) ─ storage middleware          │
+   │  Desktop grid ─ Window + ErrorBoundary per item                         │
+   │     ├── ComponentLoader ── local features (+ JspmApp iframe)             │
+   │     └── RemoteFeatureLoader ── analytics (webpack), schemaUi (ESM)       │
+   └──────────────────────────────────────────────────────────────────────────┘
+                 ▲
+                 │  desktopUI/App
+            host/ (MF host on :3001)
 ```
 
-**Benefits:**
-- One broken feature doesn't crash the app
-- Better user experience
-- Easier debugging (isolated failures)
-- App remains responsive
-
-**Trade-offs:**
-- Users must manually reset/close failed windows
-- Need error reporting integration for production
-
-See [ADR 0003: Error Boundary Per Window](./decisions/0003-error-boundary-per-window.md)
+`src/index.tsx` uses `import('./bootstrap')` so the Module Federation shared scope initialises before React renders—whether this app is the browser entry or a remote consumed by `host/`.
 
 ---
 
 ## State Management
 
-### Store Structure
-
 ```plaintext
-desktop: { windows, layouts, focusedWindowId }
+desktop: { desktopWindows, layouts, focusedWindowId, … }
 CounterReducer?: { value: number }
 NotesReducer?: { notes: Note[] }
-// Dynamic feature slices injected at runtime
+analytics?: …   # injected when the analytics remote loads
+# other dynamic slices as features mount
 ```
-
-### State Flow
-
-1. **Window Creation:**
-   - User action → `addWindow` dispatched
-   - Desktop slice updated with new window
-   - Middleware persists to localStorage
-   - Component lazy loaded
-   - Reducer injected (if needed)
-
-2. **Feature State:**
-   - Feature dispatches actions to its own slice
-   - Reducer updates feature state
-   - Component re-renders
-
-3. **Window Removal:**
-   - User closes window → `removeWindow` dispatched
-   - Desktop slice updated
-   - Middleware persists
-   - If last instance: reducer removed from store
 
 ---
 
-## Performance Considerations
+## Performance
 
-### Bundle Optimization
-
-- **Initial bundle:** Only shell + Desktop component
-- **Feature bundles:** Loaded on demand
-- **Shared dependencies:** Automatically code-split by webpack
-
-### Memory Management
-
-- **Reducer cleanup:** Unused reducers removed from store
-- **Component unmounting:** Proper cleanup in useEffect
-- **Memory leak prevention:** `useRef` for async operations
-
-### Rendering Optimization
-
-- **React.memo:** Used for expensive components
-- **useCallback/useMemo:** For stable references
-- **Error boundaries:** Prevent unnecessary re-renders on errors
+- Initial shell stays small; local features code-split; remotes never ship in the main bundle
+- Workbox marks `remoteEntry.js` and the schema-ui origin as `NetworkOnly` so remotes are not served stale from the PWA cache ([PWA_GUIDE.md](./PWA_GUIDE.md))
+- Unused local reducers are removed when their last window closes
+- Memory endurance covered by `npm run test:memory` (`@memory` Playwright suite)
 
 ---
 
 ## Testing Strategy
 
-### Unit Tests (Jest + React Testing Library)
+| Layer | Tool | Notes |
+| ----- | ---- | ----- |
+| Unit | Jest + RTL | Features, app-shell, middleware |
+| E2E | Playwright | `npm run test:e2e` starts `:3000` + analytics on `:3002` via `scripts/start-e2e-servers.sh` |
+| Memory | Playwright `@memory` | Long-running endurance |
 
-- Test components in isolation
-- Mock Redux store
-- Test reducer logic
-- Test custom hooks
-
-### E2E Tests (Playwright)
-
-- Test full user workflows
-- Test window interactions
-- Test persistence
-- Test error scenarios
-
-### Architectural Tests
-
-- Validate feature isolation
-- Test dynamic reducer injection
-- Test lazy loading behavior
-- Memory leak detection
+Suite index: [WINDOW_INTERACTIONS_TESTS.md](./WINDOW_INTERACTIONS_TESTS.md).
 
 ---
 
-## Scalability Patterns
+## Scalability
 
-### Adding New Features
+### Add a local feature
 
-1. Create feature folder under `src/features/`
-2. Implement component (optionally with Redux slice)
-3. Register in `src/core/utils/componentLoader.ts`
-4. Add button in Header
-5. Write tests
+1. Folder under `src/features/`
+2. Register in `componentLoader`
+3. Header button + constants / test selectors
+4. Unit + E2E tests
 
-No changes to core store or routing required.
+### Add a remote feature
 
-### Multi-Team Development
+1. Build a container that exposes a `FeatureModule` (or a page adapted by `toFeatureModule`)
+2. Register remote config + URL helpers in `app-shell`
+3. Open windows with `remoteFeatureName`
+4. See [MICRO_FRONTENDS.md](./MICRO_FRONTENDS.md) and [FEATURE_COMPONENTS.md](./FEATURE_COMPONENTS.md)
 
-- Each team owns specific features
-- Clear boundaries prevent conflicts
-- Independent deployment possible (with module federation)
-- Shared components in `src/components/`
+### Multi-team
 
-### Long-Term Maintenance
-
-- Features can be deprecated/removed easily
-- Refactoring isolated to feature boundaries
-- Clear ownership and documentation
-- Type safety with TypeScript
+- Local features: same repo, feature folders
+- Remotes: separate deploys / cadence (analytics, schema-ui)
+- Non-React guests: iframe SDK only
 
 ---
 
-## Trade-Offs & Limitations
+## Trade-offs
 
-### When This Architecture Works Well
+**Fits well:** multi-team dashboards, independent feature releases, long-lived platforms.
 
-✅ Large enterprise applications
-✅ Multi-team development
-✅ Long-term maintainability focus
-✅ Feature isolation requirements
-✅ Performance-critical applications
+**Overkill:** small apps, quick prototypes, single-bundle products with no remote ownership.
 
-### When This Architecture Is Overkill
-
-❌ Small applications (<10 components)
-❌ Rapid prototypes
-❌ Simple CRUD dashboards
-❌ Single-developer projects
-❌ Short-lived applications
-
----
-
-## Future Considerations
-
-### Potential Enhancements
-
-- **Module Federation:** Runtime feature loading from separate deployments
-- **Independent Deployments:** Deploy features independently
-- **Advanced Instrumentation:** Performance monitoring per feature
-- **DevTools:** Visualize injected modules and state
-- **Micro-frontends:** Full feature independence with separate builds
-- **Iframe guests:** AngularJS and other non-federated apps use [IFRAME_SDK.md](./IFRAME_SDK.md) (`window.desktopUi` + `postMessage`)
-
-### Known Limitations
-
-- Increased initial complexity
-- Learning curve for new developers
-- More boilerplate per feature
-- Requires architectural discipline
+Module Federation costs: shared dependency discipline, runtime failure modes (CORS, wrong content-type, missing chunks), and more deployables. Details in [ADR 0005](./decisions/0005-runtime-module-federation.md).
 
 ---
 
 ## Related Documentation
 
-- [Architecture Decision Records](./decisions/0001-dynamic-reducer-injection.md) - Detailed design decisions
-- [Best Practices](./BEST_PRACTICES.md) - Code quality guidelines
-- [Feature Components](./FEATURE_COMPONENTS.md) - How to add features
-- [Iframe SDK](./IFRAME_SDK.md) - AngularJS / iframe `window.postMessage` events
-- [Middleware Persistence](./MIDDLEWARE_PERSISTENCE.md) - Persistence patterns
-- [Performance](./PERFORMANCE.md) - Performance optimization guide
-
----
-
-## Conclusion
-
-This architecture prioritizes:
-
-1. **Scalability** over simplicity
-2. **Maintainability** over rapid development
-3. **Isolation** over tight integration
-4. **Long-term** over short-term gains
-
-It demonstrates how to build large-scale React applications that remain maintainable as they grow.
+- [Micro-Frontends](./MICRO_FRONTENDS.md)
+- [Architecture Decision Records](./decisions/)
+- [Feature Components](./FEATURE_COMPONENTS.md)
+- [Iframe SDK](./IFRAME_SDK.md)
+- [Middleware Persistence](./MIDDLEWARE_PERSISTENCE.md)
+- [Deployment](./DEPLOYMENT.md)
+- [Performance](./PERFORMANCE.md)
+- [Best Practices](./BEST_PRACTICES.md)

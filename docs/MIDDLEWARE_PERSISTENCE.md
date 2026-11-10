@@ -6,6 +6,17 @@ This document explains how localStorage persistence works in the Desktop UI appl
 
 The application uses Redux middleware to persist Desktop state (windows and layouts) to localStorage. This keeps reducers pure while ensuring state survives page reloads.
 
+Related keys (not all written by this middleware):
+
+| Key / param | Writer | Role |
+| ----------- | ------ | ---- |
+| `desktopUI.desktop` / `desktopUI.layouts` | `desktopStorageMiddleware` | Live window grid |
+| `desktopUI.bootstrap` | Desktop configurator | Saved “default layout” snapshot |
+| `?desktopConfig=` | Share URL | Overrides storage on first load |
+| `desktopUI.schemaUi.overlay` | iframe / Forms bridge | Record overlay for schema-as-design |
+
+Load order is documented in [ARCHITECTURE.md](./ARCHITECTURE.md#4-middleware-based-persistence).
+
 ## How It Works
 
 ### 1. Middleware Pattern

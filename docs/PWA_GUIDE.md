@@ -19,6 +19,11 @@ The service worker provides:
 1. **App Shell**: Navigation requests are served from cache with fallback to network
 2. **Static Resources**: CSS and JavaScript files use stale-while-revalidate
 3. **Images**: Cached with a cache-first strategy (max 60 images, 30-day expiration)
+4. **Module Federation remotes (`NetworkOnly`)**: configured in `config-overrides.js` Workbox `runtimeCaching`
+   - any URL ending in `/remoteEntry.js`
+   - `https://schema-ui-mf-remote.vercel.app/*`
+
+Remotes must not be served from the service worker cache, or a dashboard deploy can keep showing a stale analytics / Forms build. If a remote looks stuck after a deploy, unregister the service worker (DevTools → Application → Service Workers) and hard-refresh.
 
 ## Configuration
 
@@ -40,7 +45,7 @@ REACT_APP_ENABLE_VITALS_LOGGING=false
 
 ### Service Worker Registration
 
-The service worker is conditionally registered in `src/index.tsx`:
+The service worker is conditionally registered in `src/bootstrap.tsx` (loaded via the async MF entry `src/index.tsx`):
 
 ```typescript
 const enablePWA = process.env.REACT_APP_ENABLE_PWA === 'true' || 

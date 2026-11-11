@@ -187,11 +187,39 @@ describe('resolveInitialDesktopState', () => {
     expect(resolved.focusedWindowId).toBeNull();
   });
 
-  it('built-in dashboard includes a Forms (schemaUi) window', () => {
-    const names = getBuiltInDesktopSnapshot().windows.map(
-      (window) => window.remoteFeatureName
-    );
-    expect(names).toContain('schemaUi');
+  it('opens JSPM App and Forms as the built-in dashboard', () => {
+    const snapshot = getBuiltInDesktopSnapshot();
+    expect(snapshot.windows.map((window) => window.name)).toEqual([
+      COMPONENT_NAMES.JSPM_APP,
+      COMPONENT_NAMES.FORMS,
+    ]);
+    expect(snapshot.windows[0]).toMatchObject({
+      id: '865a9caf-fb19-4651-839d-2a845036d232',
+      lazyLoadComponent: 'JspmApp',
+      preferredSize: { h: 8 },
+    });
+    expect(snapshot.windows[1]).toMatchObject({
+      id: 'b78faa45-303d-4e64-8ac7-9e46590ab282',
+      remoteFeatureName: 'schemaUi',
+      preferredSize: { h: 8 },
+    });
+    expect(snapshot.layouts.xl).toEqual([
+      {
+        i: '865a9caf-fb19-4651-839d-2a845036d232',
+        x: 0,
+        y: 0,
+        w: 4,
+        h: 7,
+      },
+      {
+        i: 'b78faa45-303d-4e64-8ac7-9e46590ab282',
+        x: 4,
+        y: 0,
+        w: 8,
+        h: 6,
+      },
+    ]);
+    expect(snapshot.layouts.sm.map((item) => item.h)).toEqual([3, 3]);
   });
 
   it('keeps Forms and JSPM App from the production share URL', () => {

@@ -3,7 +3,6 @@ import type { DesktopUIWindow } from './types';
 import {
   COMPONENT_NAMES,
   LAYOUT_CONFIG,
-  REDUCER_NAMES,
   REMOTE_FEATURE_NAMES,
 } from '~/shared/constants';
 import type { Layouts } from 'react-grid-layout';
@@ -30,45 +29,25 @@ const layoutItem = (
 });
 
 const INIT_IDS = {
-  ANALYTICS: 'init-analytics',
-  COUNTER: 'init-counter',
-  TIMER: 'init-timer',
-  FORMS: 'init-forms',
-  NOTES: 'init-notes',
-  FORM: 'init-form',
+  JSPM: '865a9caf-fb19-4651-839d-2a845036d232',
+  FORMS: 'b78faa45-303d-4e64-8ac7-9e46590ab282',
 } as const;
 
 /**
  * Initial state config – used when localStorage is empty (first visit)
  * and no bootstrap JSON has been saved from the configurator.
  *
- * lg/xl mosaic (12 cols):
- *   [ Analytics 6x4 | Counter 3x4 | Timer 3x4 ]
- *   [ Forms     6x8 | Notes   6x4             ]
- *   [               | Form Editor 6x4         ]
+ * 12-column xl/lg: JSPM App on the left, Forms on the right.
  */
 export const INITIAL_STATE_CONFIG = {
   defaultTheme: 'gradient' as const,
   initialWindows: [
     {
-      id: INIT_IDS.ANALYTICS,
-      name: COMPONENT_NAMES.ANALYTICS,
-      remoteFeatureName: REMOTE_FEATURE_NAMES.ANALYTICS,
+      id: INIT_IDS.JSPM,
+      name: COMPONENT_NAMES.JSPM_APP,
+      lazyLoadComponent: 'JspmApp' as const,
       layout: undefined,
-      lazyLoadReducerName: REDUCER_NAMES.ANALYTICS,
-    },
-    {
-      id: INIT_IDS.COUNTER,
-      name: COMPONENT_NAMES.COUNTER,
-      lazyLoadComponent: 'Counter' as const,
-      layout: undefined,
-      lazyLoadReducerName: REDUCER_NAMES.COUNTER,
-    },
-    {
-      id: INIT_IDS.TIMER,
-      name: COMPONENT_NAMES.TIMER,
-      lazyLoadComponent: 'Timer' as const,
-      layout: undefined,
+      preferredSize: { h: LAYOUT_CONFIG.JSPM_APP_WINDOW_HEIGHT },
     },
     {
       id: INIT_IDS.FORMS,
@@ -77,52 +56,23 @@ export const INITIAL_STATE_CONFIG = {
       layout: undefined,
       preferredSize: { h: LAYOUT_CONFIG.FORMS_WINDOW_HEIGHT },
     },
-    {
-      id: INIT_IDS.NOTES,
-      name: COMPONENT_NAMES.NOTES,
-      lazyLoadComponent: 'Notes' as const,
-      layout: undefined,
-      lazyLoadReducerName: REDUCER_NAMES.NOTES,
-    },
-    {
-      id: INIT_IDS.FORM,
-      name: COMPONENT_NAMES.FORM_EDITOR,
-      lazyLoadComponent: 'FormEditor' as const,
-      layout: undefined,
-    },
   ] as DesktopUIWindow[],
   initialLayouts: {
     xl: [
-      layoutItem(INIT_IDS.ANALYTICS, 0, 0, 6, 4),
-      layoutItem(INIT_IDS.COUNTER, 6, 0, 3, 4),
-      layoutItem(INIT_IDS.TIMER, 9, 0, 3, 4),
-      layoutItem(INIT_IDS.FORMS, 0, 4, 6, 8),
-      layoutItem(INIT_IDS.NOTES, 6, 4, 6, 4),
-      layoutItem(INIT_IDS.FORM, 6, 8, 6, 4),
+      layoutItem(INIT_IDS.JSPM, 0, 0, 4, 7),
+      layoutItem(INIT_IDS.FORMS, 4, 0, 8, 6),
     ],
     lg: [
-      layoutItem(INIT_IDS.ANALYTICS, 0, 0, 6, 4),
-      layoutItem(INIT_IDS.COUNTER, 6, 0, 3, 4),
-      layoutItem(INIT_IDS.TIMER, 9, 0, 3, 4),
-      layoutItem(INIT_IDS.FORMS, 0, 4, 6, 8),
-      layoutItem(INIT_IDS.NOTES, 6, 4, 6, 4),
-      layoutItem(INIT_IDS.FORM, 6, 8, 6, 4),
+      layoutItem(INIT_IDS.JSPM, 0, 0, 4, 6),
+      layoutItem(INIT_IDS.FORMS, 4, 0, 8, 5),
     ],
     md: [
-      layoutItem(INIT_IDS.ANALYTICS, 0, 0, 8, 4),
-      layoutItem(INIT_IDS.FORMS, 0, 4, 8, 6),
-      layoutItem(INIT_IDS.COUNTER, 0, 10, 4, 4),
-      layoutItem(INIT_IDS.TIMER, 4, 10, 4, 4),
-      layoutItem(INIT_IDS.NOTES, 0, 14, 4, 4),
-      layoutItem(INIT_IDS.FORM, 4, 14, 4, 4),
+      layoutItem(INIT_IDS.JSPM, 0, 0, 4, 4),
+      layoutItem(INIT_IDS.FORMS, 4, 0, 4, 4),
     ],
     sm: [
-      layoutItem(INIT_IDS.ANALYTICS, 0, 0, 2, 4),
-      layoutItem(INIT_IDS.COUNTER, 0, 4, 2, 4),
-      layoutItem(INIT_IDS.TIMER, 0, 8, 2, 4),
-      layoutItem(INIT_IDS.FORMS, 0, 12, 2, 6),
-      layoutItem(INIT_IDS.NOTES, 0, 18, 2, 4),
-      layoutItem(INIT_IDS.FORM, 0, 22, 2, 4),
+      layoutItem(INIT_IDS.JSPM, 0, 0, 2, 3),
+      layoutItem(INIT_IDS.FORMS, 0, 3, 2, 3),
     ],
   } as Layouts,
 };

@@ -42,9 +42,24 @@ src/features/<FeatureName>/
 
 - **What**: Cross-origin AngularJS app in an iframe (`https://jspm-app.vercel.app`).
 - **Redux**: None in the guest. Host listens for iframe events and can `removeWindow`.
-- **Events**: Guest `window.desktopUi.emit('userUpdated', { entity, record })` → overlay + Forms remount + `dashboardSync`. Schema is the design: [IFRAME_SDK.md](./IFRAME_SDK.md), skill `desktop-ui-schema-as-design`.
+- **Events**: Guest `window.desktopUi.emit('userUpdated', { entity, record })` → overlay + Forms remount + `dashboardSync`. Schema is the design: [IFRAME_SDK.md](./IFRAME_SDK.md).
 - **Unit tests**: iframe URL handshake query; origin-checked `close`.
 - **E2E**: `tests/jspm-app.spec.ts`.
+
+### Analytics remote (`features/remotes/analytics/`)
+
+- **What**: Webpack Module Federation remote (`analytics` / `./Feature`).
+- **Window field**: `remoteFeatureName: 'analytics'` (not `lazyLoadComponent`).
+- **Rendered by**: `RemoteFeatureLoader` → `loadRemoteFeature('analytics')`.
+- **Dev**: `npm run analytics:start` on `:3002`. Docs: [analytics README](../src/features/remotes/analytics/README.md), [MICRO_FRONTENDS.md](./MICRO_FRONTENDS.md).
+
+### Forms remote (`schemaUi`)
+
+- **What**: External Vite ESM remote ([schema-ui-mf-remote](https://schema-ui-mf-remote.vercel.app)).
+- **Window field**: `remoteFeatureName: 'schemaUi'`.
+- **Adaptation**: `toFeatureModule()` wraps `EntityPage` and injects `{ entity: 'users', apiBase, … }`.
+- **Fetch overlay**: `SchemaUiFetchGate` while Forms windows are mounted.
+- **E2E**: `tests/schema-ui-forms.spec.ts`.
 
 ## Adding a new feature
 
@@ -83,6 +98,17 @@ src/features/<FeatureName>/
 
 5. **Add E2E spec**: Create `tests/<name>.spec.ts` for end-to-end testing. Use centralized test selectors from `src/shared/testSelectors.ts` for all `data-testid` values. Call `closeAllWindows(page)` from `~/tests/helpers` when tests assume an empty initial state.
 
+## Adding a new remote feature
+
+1. Expose a default `FeatureModule` (or a page component that `toFeatureModule()` can adapt) from a federation container.
+2. Add remote config in `src/app-shell/loadRemoteFeature.ts` (`name`, `kind`, `expose`, entry URL builder).
+3. Add URL helpers / env defaults in `src/app-shell/remoteUrls.ts` and `.env.example`.
+4. Open windows with `remoteFeatureName` (see Header “Add Analytics” / “Add Forms”).
+5. Share React (and Redux if needed) as singletons; enable CORS on the remote origin.
+6. Cover load failures and happy path in unit / E2E tests (`tests/micro-frontends.spec.ts` pattern).
+
+Full topology and troubleshooting: [MICRO_FRONTENDS.md](./MICRO_FRONTENDS.md).
+
 ## Adding Desktop Actions (IMPORTANT!)
 
 If you need to add a new action to `DesktopSlice` that modifies windows or layouts:
@@ -102,5 +128,6 @@ This ensures consistency and makes refactoring easier.
 
 ## Running tests
 
-- **Unit**: `npm test -- --watchAll=false`
-- **E2E**: Start app (`npm start`), then `npx playwright test`
+- **Unit**: `npm run test:unit`
+- **E2E**: `npm run test:e2e` (Playwright starts the built dashboard on `:3000` and analytics on `:3002` via `scripts/start-e2e-servers.sh`)
+- **Memory**: `npm run test:memory`

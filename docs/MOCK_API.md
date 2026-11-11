@@ -2,7 +2,7 @@
 
 ## Overview
 
-The FormEditor component uses a mock API service (`src/utils/mockApi.ts`) to simulate backend interactions. This allows the starter template to work out-of-the-box without requiring a real backend server.
+The FormEditor component uses a mock API service (`src/shared/utils/mockApi.ts`) to simulate backend interactions so the Form Editor window works without a real backend. (The Forms **remote** talks to schema-ui’s `/api` instead—see [MICRO_FRONTENDS.md](./MICRO_FRONTENDS.md).)
 
 ---
 
@@ -91,7 +91,7 @@ To integrate a real backend API:
 
 ### 1. Create API Service
 
-Replace `src/utils/mockApi.ts` with real API calls:
+Replace `src/shared/utils/mockApi.ts` with real API calls:
 
 ```typescript
 // src/utils/api.ts

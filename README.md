@@ -1,270 +1,185 @@
-# desktop-ui
+# desktop-ui · Module Federation
 
 ![React](https://img.shields.io/badge/React-18-61dafb?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript)
+![Webpack](https://img.shields.io/badge/Webpack_5-Module_Federation-8dd6f9?logo=webpack)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-**A starter template for scalable React applications.** Clone it, customize it, and start building serious projects without reinventing architecture, testing, or documentation.
+**A desktop-style React dashboard that composes local feature modules, runtime-loaded micro-frontends, and cross-origin iframe apps in one window grid.**
 
-This project aims to provide a scalable starting point for large React applications, emphasizing modular architecture, isolated state domains, and maintainable testing infrastructure.
+This repository grew out of [desktop-ui](https://github.com/milenstanev/desktop-ui), the original modular SPA starter (feature folders, dynamic reducer injection, lazy loading). `desktop-ui.module-federation` keeps that core and adds:
 
-- **Modular architecture** – Feature-based structure, dynamic reducer injection, lazy loading
-- **Documentation** – [Architecture](./docs/ARCHITECTURE.md), [ADRs](./docs/decisions/0001-dynamic-reducer-injection.md), [Best Practices](./docs/BEST_PRACTICES.md), and [full index](#-documentation)
-- **Testing infrastructure** – Jest, React Testing Library, Playwright E2E, memory/performance tests
+- **Webpack Module Federation host**: loads remote features at runtime
+  - `analytics`: a classic webpack `remoteEntry.js` script, in-tree at `src/features/remotes/analytics`
+  - `schemaUi`: an ESM (Vite) `remoteEntry.js` from [schema-ui-mf-remote](https://schema-ui-mf-remote.vercel.app) that renders schema-driven CRUD forms
+- **Module Federation remote**: desktop-ui exposes itself as the `desktopUI` container (`./App`, `./Desktop`, `./Counter`, `./Notes`), and the [`host/`](./host/README.md) app consumes it
+- **Iframe SDK**: a cross-origin AngularJS (JSPM) app talks to the dashboard through a versioned `postMessage` protocol
+- **Schema-as-design sync**: a record edited in the iframe or the Forms remote is shared through a localStorage overlay, and every dashboard surface re-renders it
+- **Dashboard configurator**: export, paste, or share the whole dashboard (windows + layouts) as JSON or as a `?desktopConfig=` URL
+- **Feature contract and registry**: local and remote features share one `FeatureModule` interface
 
-Built with React, TypeScript, and Redux. PWA-ready. → [Full docs index](#-documentation)
+→ [Full docs index](#-documentation)
 
 ---
 
 ## 🚀 Quick Start
 
-Clone the repository and install dependencies:
-
 ```bash
-git clone <your-repo-url>
-cd desktop-ui
+git clone https://github.com/milenstanev/desktop-ui.module-federation.git
+cd desktop-ui.module-federation
 npm install
+npm run mf:install        # installs host/ and the analytics remote
 ```
 
-Start the development server:
+Run the dashboard together with the local analytics remote:
 
 ```bash
-npm run start
+npm run start             # desktop-ui on http://localhost:3000
+npm run analytics:start   # analytics remote on http://localhost:3002
 ```
 
-Run tests:
+The Forms window loads `schemaUi` from `https://schema-ui-mf-remote.vercel.app` by default, and the JSPM App window embeds `https://jspm-app.vercel.app`. Neither needs a local server.
+
+Optional: run desktop-ui as a **remote** inside the standalone host app:
 
 ```bash
-npm run test:unit      # Unit tests (Jest)
-npm run test:e2e       # E2E tests (Playwright)
-npm run test:all       # Unit + E2E
+npm run mf:demo           # build + serve desktop-ui on :3000
+npm run host:start        # host on http://localhost:3001 renders desktopUI/App
+```
+
+Tests:
+
+```bash
+npm run test:unit         # Jest + React Testing Library
+npm run test:e2e          # Playwright (starts :3000 and the analytics remote on :3002)
+npm run test:memory       # long-running memory endurance suite (@memory)
 ```
 
 ---
 
-## 🧠 Why This Starter Exists
+## ⚙️ How It Works
 
-Most React starters are either too minimal (no structure) or too opinionated (framework lock-in). Large applications often hit the same problems:
+```
+                           desktop-ui  (MF container "desktopUI")
+   ┌──────────────────────────────────────────────────────────────────────────┐
+   │  Header ─ addWindow({ lazyLoadComponent | remoteFeatureName })           │
+   │     │                                                                    │
+   │  Redux store (Desktop slice + injected reducers) ─ storage middleware    │
+   │     │                                                                    │
+   │  Desktop grid (react-grid-layout) ─ one Window + ErrorBoundary per item  │
+   │     │                                                                    │
+   │     ├── ComponentLoader ──► componentLoader  (local, code-split)         │
+   │     │     Simple Example · Counter · Notes · Timer · Form Editor ·       │
+   │     │     JSPM App ─────────► <iframe> + postMessage SDK                 │
+   │     │                                                                    │
+   │     └── RemoteFeatureLoader ─► loadRemoteFeature()  (Module Federation)  │
+   │           analytics  ─ webpack script remoteEntry.js  (:3002 / /remote)  │
+   │           schemaUi   ─ ESM remoteEntry.js + fetch overlay  (Forms)       │
+   └──────────────────────────────────────────────────────────────────────────┘
+                 ▲
+                 │  desktopUI/App
+            host/ (MF host on :3001)
+```
 
-- **Global state bloat** – Every feature adds to a single Redux store
-- **Unclear module boundaries** – Features become interdependent, changes get risky
-- **No testing story** – E2E and performance tests bolted on later
-- **Scaling pain** – Initial bundle grows, teams step on each other
+1. `src/index.tsx` does `import('./bootstrap')` so the MF shared scope (React, Redux) is initialised before the app renders.
+2. Each window is a `DesktopUIWindow`. It names either a **local** component (`lazyLoadComponent`) or a **remote** feature (`remoteFeatureName`).
+3. Local features are code-split via `componentLoader`. Their reducers are injected with `useLazyLoadReducer`.
+4. Remote features are resolved by `loadRemoteFeature()`. It fetches the remote container, shares the host's React into its scope, and calls `container.get(expose)`. Then it registers the resulting `FeatureModule` and injects its reducer.
+5. Desktop state (windows, layouts) is persisted by `desktopStorageMiddleware`. The initial dashboard comes from, in order: a `?desktopConfig=` query, saved localStorage, a saved bootstrap snapshot, and the built-in layout.
 
-This starter provides a structured foundation for building scalable React applications without reinventing architecture or tooling.
+Details: [Architecture](./docs/ARCHITECTURE.md) · [Micro-frontends](./docs/MICRO_FRONTENDS.md) · [Iframe SDK](./docs/IFRAME_SDK.md)
 
 ---
 
-## 👥 Who This Is For
+## 🧩 What's on the Dashboard
 
-This starter is designed for:
+| Window         | Kind                  | Source                                           |
+| -------------- | --------------------- | ------------------------------------------------ |
+| Simple Example | Local                 | `src/features/SimpleExample`                     |
+| Counter        | Local + reducer       | `src/features/Counter` (`CounterReducer`)        |
+| Notes          | Local + reducer       | `src/features/Notes` (`NotesReducer`)            |
+| Timer          | Local                 | `src/features/Timer`                             |
+| Form Editor    | Local                 | `src/features/FormEditor` (mock API, validation) |
+| JSPM App       | Local iframe guest    | `src/features/JspmApp` → `jspm-app.vercel.app`   |
+| Analytics      | Remote (webpack MF)   | `src/features/remotes/analytics`                 |
+| Forms          | Remote (ESM MF)       | `schema-ui-mf-remote` container `schemaUi`       |
 
-- Teams building large React applications
-- SaaS platforms and dashboards
-- Multi-team frontend development
-- Long-lived frontend platforms
-
----
-
-## 🏗 Architectural Goals
-
-The main objectives were:
-
-- Feature-based module boundaries
-- Isolated state domains per module
-- Dynamic feature injection
-- Lazy loading & performance-aware rendering
-- Scalable structure for independent evolution
+The header also has a theme selector (Light / Dark / Gradient), **Grid**, **Reset**, and **Close All** buttons, the **JSON** dashboard configurator, and the **Architecture** panel that loads the analytics remote on demand.
 
 ---
 
-## ⚙️ How It Works (Quick Overview)
-
-1. The application boots with a minimal core.
-2. Features are dynamically loaded when required.
-3. Each feature injects its own reducer into the store.
-4. State remains isolated to prevent global coupling.
-5. Unused modules are not part of the initial bundle.
+## 📂 Repository Layout
 
 ```
-     Application Core (App, Store, Router)
-                    │
-                    ▼
-            Component Loader (feature registry)
-                    │
-        ┌───────────┼───────────┬───────────┐
-        ▼           ▼           ▼           ▼
-     Counter    FormEditor    Notes      Timer
-     Module      Module      Module     Module
-   (lazy)      (lazy)      (lazy)     (lazy)
+.
+├── src/
+│   ├── index.tsx / bootstrap.tsx   # async MF entry → real bootstrap
+│   ├── app/                        # App, Header, FooterTaskbar
+│   ├── app-shell/                  # remote loading, ESM import, schema-ui fetch overlay, iframe bridge
+│   ├── core/                       # store, reducer manager, feature registry/contract, middleware, theme, GA
+│   ├── features/                   # Desktop, Counter, Notes, Timer, FormEditor, JspmApp, MicroFrontendDemo, …
+│   │   └── remotes/analytics/      # standalone analytics remote (own package.json + webpack)
+│   └── shared/                     # Window, ErrorBoundary, Loader, forms, constants, test selectors
+├── host/                           # standalone MF host that consumes desktopUI/App
+├── tests/                          # Playwright suites (MF, schema-ui, JSPM, configurator, memory…)
+├── scripts/                        # e2e server launcher, Vercel deploy + artifact checks
+├── config-overrides.js             # react-app-rewired: ModuleFederationPlugin, Workbox, analyzer
+├── microfrontends.json             # Vercel microfrontends routing (/remote → analytics)
+└── docs/
 ```
-
----
-
-## 📂 Example Feature Module
-Each feature is self-contained. When you add a new feature, follow this structure:
-
-```
-src/features/MyFeature/
-├── __tests__/
-│   ├── unit/           # Jest unit tests
-│   │   └── MyFeature.test.tsx
-│   └── e2e/            # Playwright E2E tests (optional)
-│       └── my-feature.spec.ts
-├── MyFeature.tsx       # Main component
-├── MyFeatureSlice.ts   # Redux slice (optional)
-├── MyFeature.module.css
-└── README.md           # Feature docs (optional)
-```
-
-Register the feature in `src/core/utils/componentLoader.ts` and add a button in the header. See [Module System](./docs/FEATURE_COMPONENTS.md) for details.
 
 ---
 
 ## 📦 Core Concepts
 
-### 1️⃣ Feature-Based Structure
-
-Each feature is treated as an independent module with:
-
-- Its own state logic
-- Clear responsibility
-- Encapsulated domain boundaries
-
-This reduces cross-feature coupling.
-
----
-
-### 2️⃣ Dynamic Reducer Injection
-
-Instead of a single monolithic global store, reducers are injected dynamically as modules are loaded.
-
-Benefits:
-- Prevents unnecessary state bloat
-- Improves scalability
-- Allows independent feature evolution
-
-Trade-off:
-- Slightly increased architectural complexity
-
----
-
-### 3️⃣ Lazy Loading
-
-Modules are loaded on demand using dynamic imports.
-
-Benefits:
-- Reduced initial bundle size
-- Improved perceived performance
-- Better scalability for large systems
-
----
-
-### 4️⃣ Performance & Memory Awareness
-
-The architecture enforces controlled rendering boundaries and encourages explicit module ownership through:
-
-- Isolated module lifecycles
-- Reduced unnecessary global state updates
-- Memory-aware cleanup patterns
-
----
-
-## 🔌 PWA Support
-
-The project includes Progressive Web App configuration to explore:
-
-- Offline readiness
-- Caching strategies
-- Production-like deployment behavior
+- **Feature-based modules**: each feature folder owns its component, slice, styles, and tests. → [Feature Components](./docs/FEATURE_COMPONENTS.md)
+- **Dynamic reducer injection**: slices are added when a window opens and removed when the last window that uses them closes. → [ADR 0001](./docs/decisions/0001-dynamic-reducer-injection.md)
+- **One feature contract**: `FeatureModule { name, displayName, component, reducer?, init? }` works for both local and remote features. → [Micro-frontends](./docs/MICRO_FRONTENDS.md)
+- **Runtime federation**: remotes are deployed independently and resolved at runtime from configurable URLs, with fallbacks. → [ADR 0005](./docs/decisions/0005-runtime-module-federation.md)
+- **Isolation by default**: each window gets its own error boundary. Iframe guests can only reach the dashboard through origin-checked messages. → [ADR 0003](./docs/decisions/0003-error-boundary-per-window.md), [ADR 0004](./docs/decisions/0004-iframe-postmessage-sdk.md)
+- **Persistence in middleware**: reducers stay pure, and localStorage writes happen in one place. → [Middleware Persistence](./docs/MIDDLEWARE_PERSISTENCE.md)
 
 ---
 
 ## ⚖️ Trade-Offs
 
-This architecture increases:
+Module Federation buys independent deployment. In exchange:
 
-- Structural complexity
-- Initial setup overhead
-- Mental model requirements for contributors
+- **Shared dependency discipline**: React, React DOM, React Redux, and Redux Toolkit must stay singleton-compatible across the host and every remote.
+- **Runtime failure modes**: a remote can be down, stale, or serve HTML instead of JS. The loader reports which URLs it tried, and the window shows the error instead of crashing.
+- **More moving parts**: three deployables (dashboard, analytics remote, host) plus external services (schema-ui, JSPM).
+- **Cross-origin limits**: iframe guests can't share React or Redux. Everything goes through JSON `postMessage`.
 
-It is not ideal for:
-
-- Small applications
-- Rapid prototypes
-- Simple CRUD dashboards
-
-It is intended for:
-- Large enterprise systems
-- Multi-team development environments
-- Long-term maintainability focus
-
----
-
-## 🚀 When to Use This Pattern
-
-Consider this approach when:
-
-- The application is expected to grow significantly
-- Multiple teams (3+) contribute to the same frontend
-- Feature isolation is critical for independent releases
-- Long-term maintainability outweighs initial simplicity
-- You've experienced the pain of refactoring a 100k+ LOC monolithic SPA
-
----
-
-## 🧪 Testing Strategy
-
-- Unit testing with Jest
-- Component testing
-- E2E testing with Playwright
-- Architectural boundaries validated via modular isolation
-
----
-
-## 🔭 Future Exploration
-
-Potential areas of expansion:
-
-- Runtime module federation comparison
-- Independent deployment pipelines
-- Advanced performance instrumentation
-- DevTools visualization of injected modules
-
----
-
-## 📌 Using This Starter
-
-Use this as your foundation. The architecture, docs, and tests are there so you can start a serious project without bootstrapping from scratch. Adapt patterns to your needs; the structure is meant to scale with you.
+This is overkill for small apps and prototypes. It fits multi-team frontends that need to ship features independently.
 
 ---
 
 ## 📚 Documentation
 
 ### Architecture
-- [Architecture Overview](./docs/ARCHITECTURE.md) – Patterns, structure, and design decisions
-- [Module System](./docs/FEATURE_COMPONENTS.md) – How to add and structure features
-- [State Management](./docs/MIDDLEWARE_PERSISTENCE.md) – Persistence and reducer injection  
-- [Architecture Decision Records](./docs/decisions/0001-dynamic-reducer-injection.md) – ADRs for key choices (reducer injection, storage, error boundaries)
+- [Architecture Overview](./docs/ARCHITECTURE.md): structure, patterns, load flows
+- [Micro-Frontends](./docs/MICRO_FRONTENDS.md): Module Federation host/remote, remote URLs, shared scope, troubleshooting
+- [Iframe SDK](./docs/IFRAME_SDK.md) · [Protocol](./docs/IFRAME_SDK_PROTOCOL.md) · [Guest](./docs/IFRAME_SDK_GUEST.md): `window.desktopUi` + `postMessage`
+- [Architecture Decision Records](./docs/decisions/): reducer injection, storage, error boundaries, iframe SDK, runtime federation
 
 ### Development
-- [Best Practices](./docs/BEST_PRACTICES.md) – Code quality and conventions
-- [Configuration](./docs/CONFIGURATION.md) – Environment and settings
-- [Debugging](./docs/DEBUGGING.md) – Breakpoints and dev setup
-- [API & Hooks](./docs/API_DOCUMENTATION.md) – Hooks and utilities reference
-- [PWA Guide](./docs/PWA_GUIDE.md) – Progressive Web App setup
+- [Feature Components](./docs/FEATURE_COMPONENTS.md): add local or remote features
+- [Middleware Persistence](./docs/MIDDLEWARE_PERSISTENCE.md): Desktop actions, localStorage keys, bootstrap snapshot
+- [Configuration](./docs/CONFIGURATION.md): environment variables and storage keys
+- [API & Hooks](./docs/API_DOCUMENTATION.md): hooks, utilities, app-shell APIs
+- [Best Practices](./docs/BEST_PRACTICES.md) · [Debugging](./docs/DEBUGGING.md) · [PWA Guide](./docs/PWA_GUIDE.md)
+- [Deployment](./docs/DEPLOYMENT.md): Vercel/Netlify for the dashboard, analytics remote, and host
 
 ### Testing
-- [E2E Tests](./docs/WINDOW_INTERACTIONS_TESTS.md) – Playwright and window interaction patterns
-- [Performance Testing](./docs/PERFORMANCE.md) – Web Vitals, optimization, and memory testing
+- [E2E Tests](./docs/WINDOW_INTERACTIONS_TESTS.md): Playwright suites and window interaction patterns
+- [Performance Testing](./docs/PERFORMANCE.md): Web Vitals, bundle analysis, memory endurance
 
 ### Features & Reference
-- [Implemented Features](./docs/IMPLEMENTED_FEATURES.md) – Current feature set
-- [Mock API](./docs/MOCK_API.md) – Mock API for FormEditor and demos
-- [Shared Forms](./src/shared/forms/README.md) – Reusable form components
+- [Implemented Features](./docs/IMPLEMENTED_FEATURES.md): current feature set
+- [Mock API](./docs/MOCK_API.md) · [Shared Forms](./src/shared/forms/README.md) · [Analytics remote](./src/features/remotes/analytics/README.md) · [Host app](./host/README.md)
 
 ---
 
 ## 📬 Feedback
 
-I welcome discussions and architectural feedback from other engineers exploring modular SPA or micro-frontend strategies.
+Discussions and architectural feedback on modular SPA and micro-frontend strategies are welcome.

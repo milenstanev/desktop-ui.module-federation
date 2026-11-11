@@ -6,6 +6,7 @@ This document provides an overview of the key APIs and utilities in the Desktop 
 
 - [Hooks](#hooks)
 - [Utilities](#utilities)
+- [App shell (Module Federation & iframe)](#app-shell-module-federation--iframe)
 - [Context](#context)
 - [Redux](#redux)
 
@@ -98,7 +99,7 @@ function MyComponent() {
 
 Access theme context from any component. Must be used within a `ThemeProvider`.
 
-**Location:** `src/contexts/ThemeContext.tsx`
+**Location:** `src/core/contexts/ThemeContext.tsx`
 
 **Returns:**
 - `theme: Theme` - Current active theme ('light' | 'dark' | 'gradient')
@@ -113,7 +114,7 @@ Access theme context from any component. Must be used within a `ThemeProvider`.
 
 ### componentLoader
 
-Centralized registry for lazy-loaded feature components. Each entry returns a dynamic import that enables code splitting.
+Centralized registry for **local** lazy-loaded feature components. Each entry returns a dynamic import that enables code splitting. Remotes are **not** listed here—they use `remoteFeatureName` + `loadRemoteFeature`.
 
 **Location:** `src/core/utils/componentLoader.ts`
 
@@ -123,6 +124,7 @@ Centralized registry for lazy-loaded feature components. Each entry returns a dy
 - `FormEditor`
 - `Notes`
 - `Timer`
+- `JspmApp`
 
 **getLazyComponent(componentName):** Returns a cached lazy component for the given name. Reuses the same component reference across renders to prevent unnecessary remounts and loader flashes (e.g. when focusing windows).
 
@@ -135,7 +137,7 @@ Centralized registry for lazy-loaded feature components. Each entry returns a dy
 
 ### ComponentLoader
 
-Reusable component that wraps a lazy-loaded feature in `Suspense` with a loader fallback. Used by Desktop to render each window's content.
+Reusable component that wraps a lazy-loaded feature in `Suspense` with a loader fallback. Used by Desktop for windows with `lazyLoadComponent`.
 
 **Location:** `src/shared/components/ComponentLoader/ComponentLoader.tsx`
 
@@ -244,13 +246,68 @@ Simulates an API error for testing error handling.
 
 ---
 
+## App shell (Module Federation & iframe)
+
+### loadRemoteFeature
+
+Loads a remote container at runtime, normalises it to a `FeatureModule`, registers it, and injects its reducer when present.
+
+**Location:** `src/app-shell/loadRemoteFeature.ts`
+
+**API:**
+- `loadRemoteFeature(remoteName: string): Promise<FeatureModule>`
+- `getRemoteConfig(remoteName: string)`
+- `getAvailableRemotes(): string[]`
+
+Supports `webpack-script` (`analytics`) and `esm` (`schemaUi`) kinds. Concurrent callers share one in-flight promise; failed loads are evicted so retries work. See [MICRO_FRONTENDS.md](./MICRO_FRONTENDS.md).
+
+### RemoteFeatureLoader
+
+React wrapper for windows with `remoteFeatureName`. Shows loading / error UI; installs `SchemaUiFetchGate` for Forms.
+
+**Location:** `src/app-shell/RemoteFeatureLoader.tsx`
+
+### remoteUrls
+
+**Location:** `src/app-shell/remoteUrls.ts`
+
+- `getAnalyticsRemoteBaseUrl()` / `getSchemaUiRemoteBaseUrl()`
+- `buildRemoteEntryUrls(remoteName, baseUrl)` — candidate `remoteEntry.js` URLs
+
+### importRemoteEsm
+
+**Location:** `src/app-shell/importRemoteEsm.ts`
+
+- `assertEsmRemoteEntry(url)` — content-type + chunk checks
+- `importRemoteEsmModule(url)` — native ESM import bypassing CRA webpack rewrite
+
+### schemaUiFetch
+
+**Location:** `src/app-shell/schemaUiFetch.ts`
+
+Reference-counted `window.fetch` overlay for Forms: rewrites same-origin `/api/*` to the schema-ui remote and merges `desktopUI.schemaUi.overlay`.
+
+### iframe bridge
+
+**Location:** `src/app-shell/iframeBridge/`
+
+Protocol helpers, guest installer (`createDesktopUiGuest` / `installDesktopUiGuest`), `parseGuestMessage`, `useIframeGuestEvents`, `applyGuestEntityUpdate`. Docs: [IFRAME_SDK.md](./IFRAME_SDK.md).
+
+### Feature registry
+
+**Location:** `src/core/feature-registry.ts` · types in `src/core/feature-types.ts`
+
+`registerFeature` / `getFeature` / `hasFeature` / `listFeatures` — shared by local adapters and remotes.
+
+---
+
 ## Context
 
 ### ThemeProvider
 
 Wraps the application to provide theme context. Automatically applies theme to document root and persists changes.
 
-**Location:** `src/contexts/ThemeContext.tsx`
+**Location:** `src/core/contexts/ThemeContext.tsx`
 
 **Props:**
 - `children: React.ReactNode` - Child components to wrap
@@ -304,19 +361,27 @@ reducerManager.remove('counter');
 
 ### ComponentNames
 
-Type representing all available component names in the component loader.
+Type representing all available **local** component names in the component loader.
 
 **Location:** `src/core/utils/componentLoader.ts`
 
 ```
-type ComponentNames = 'SimpleExample' | 'Counter' | 'FormEditor' | 'Notes' | 'Timer';
+type ComponentNames =
+  | 'SimpleExample'
+  | 'Counter'
+  | 'FormEditor'
+  | 'Notes'
+  | 'Timer'
+  | 'JspmApp';
 ```
+
+Remote windows use `remoteFeatureName: 'analytics' | 'schemaUi'` instead.
 
 ### Theme
 
 Available theme options.
 
-**Location:** `src/contexts/ThemeContext.tsx`
+**Location:** `src/core/contexts/ThemeContext.tsx`
 
 ```
 type Theme = 'light' | 'dark' | 'gradient';
@@ -346,11 +411,11 @@ interface StoreWithReducerManager extends EnhancedStore {
 
 ### Adding New Features
 
-1. Create feature folder under `src/features/`
-2. Add component to `componentLoader`
-3. If feature needs state, create a slice and use `useLazyLoadReducer`
+1. Create feature folder under `src/features/` **or** ship a federation remote
+2. Local: add to `componentLoader`. Remote: register in `loadRemoteFeature` / `remoteUrls`
+3. If the feature needs state, create a slice (`useLazyLoadReducer` or remote `reducer`)
 4. Add test selectors to `src/shared/testSelectors.ts`
-5. Write unit and E2E tests
+5. Write unit and E2E tests ([FEATURE_COMPONENTS.md](./FEATURE_COMPONENTS.md))
 
 ### Working with localStorage
 
@@ -386,3 +451,6 @@ To get the best experience:
 ## Additional Resources
 
 - [Main README](../README.md)
+- [Micro-Frontends](./MICRO_FRONTENDS.md)
+- [Architecture](./ARCHITECTURE.md)
+- [Iframe SDK](./IFRAME_SDK.md)

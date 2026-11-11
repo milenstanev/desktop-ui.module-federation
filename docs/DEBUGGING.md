@@ -124,7 +124,7 @@ If you already have the app running:
 
 ### Debug Window Component
 
-1. Set breakpoint in `src/components/Window/Window.tsx`
+1. Set breakpoint in `src/shared/components/Window/Window.tsx`
 2. Start debugging
 3. Add a window in the app
 4. Debugger pauses when window renders
